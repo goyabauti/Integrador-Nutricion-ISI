@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "My App",
-  description: "A fullstack Next.js app",
+  title: "Calidad de Budin",
+  description: "Pagina que permite calificar distintas carateristicas del Budin",
 };
 
 export default function RootLayout({
