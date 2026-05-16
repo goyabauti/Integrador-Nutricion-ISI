@@ -1,11 +1,12 @@
-export default function Home() {
-  return (
-    <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>My App</h1>
-      <p style={{ marginTop: "1rem", color: "gray" }}>
-        Fullstack Next.js + TypeScript starter. Edit{" "}
-        <code>src/app/page.tsx</code> to get started.
-      </p>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+export default async function Home() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile } = await supabase
+    .from("profiles").select("rol").eq("id", user.id).single();
+  if (profile?.rol === "admin") redirect("/admin");
+  redirect("/evaluar");
 }
