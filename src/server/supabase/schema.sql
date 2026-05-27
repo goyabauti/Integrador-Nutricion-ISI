@@ -3,27 +3,30 @@
 -- Escala hedónica 1-5
 -- Ficha 1: Hedónica | Ficha 2: Descriptiva
 -- =============================================
+-- FLUJO:
+--   Evaluadores: NO necesitan cuenta. Ponen nombre, apellido y email.
+--   Admin: Sí necesita cuenta (auth de Supabase) para ver resultados.
+-- =============================================
 
 -- Limpiar tablas existentes
 DROP TABLE IF EXISTS public.calificaciones CASCADE;
 DROP TABLE IF EXISTS public.evaluaciones CASCADE;
 DROP TABLE IF EXISTS public.parametros CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user();
 
--- 1. Perfiles
+-- 1. Perfiles (solo admin)
+--    Se crea manualmente en Supabase para cada admin.
 CREATE TABLE public.profiles (
   id         UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   nombre     TEXT NOT NULL,
   email      TEXT NOT NULL,
-  rol        TEXT NOT NULL DEFAULT 'evaluador' CHECK (rol IN ('evaluador', 'admin')),
+  rol        TEXT NOT NULL DEFAULT 'admin' CHECK (rol IN ('admin')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Parámetros
+-- 2. Parámetros de evaluación
 --    ficha:     'hedonica' | 'descriptiva'
---    categoria: NULL | 'positivos' | 'generales' | 'defectos'
+--    categoria: NULL (para hedónica) | 'positivos' | 'generales' | 'defectos'
 CREATE TABLE public.parametros (
   id          SERIAL PRIMARY KEY,
   nombre      TEXT NOT NULL,
@@ -34,16 +37,17 @@ CREATE TABLE public.parametros (
   orden       INTEGER DEFAULT 0
 );
 
--- 3. Evaluaciones (una por usuario)
+-- 3. Evaluaciones (datos del evaluador directo, SIN cuenta)
 CREATE TABLE public.evaluaciones (
   id          SERIAL PRIMARY KEY,
-  user_id     UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  nombre      TEXT NOT NULL,
+  apellido    TEXT NOT NULL,
+  email       TEXT NOT NULL,
   comentario  TEXT,
-  created_at  TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id)
+  created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Calificaciones (valor 1-5 hedónico, observacion opcional)
+-- 4. Calificaciones (valor 1-5 hedónico, observación opcional)
 CREATE TABLE public.calificaciones (
   id            SERIAL PRIMARY KEY,
   evaluacion_id INTEGER REFERENCES public.evaluaciones(id) ON DELETE CASCADE NOT NULL,
@@ -53,31 +57,51 @@ CREATE TABLE public.calificaciones (
   UNIQUE(evaluacion_id, parametro_id)
 );
 
--- RLS
+-- =============================================
+-- RLS (Row Level Security)
+-- =============================================
 ALTER TABLE public.profiles       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.parametros     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evaluaciones   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calificaciones ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Perfil propio" ON public.profiles FOR ALL USING (auth.uid() = id);
-CREATE POLICY "Admin ve perfiles" ON public.profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin'));
+-- Profiles: solo el admin ve/edita su propio perfil
+CREATE POLICY "Perfil propio" ON public.profiles
+  FOR ALL USING (auth.uid() = id);
 
-CREATE POLICY "Todos leen parametros" ON public.parametros FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin gestiona parametros" ON public.parametros FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin'));
+-- Parametros: cualquiera puede leer (incluso anónimos, para el formulario)
+CREATE POLICY "Lectura pública de parametros" ON public.parametros
+  FOR SELECT USING (true);
 
-CREATE POLICY "Evaluador inserta" ON public.evaluaciones FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Evaluador lee la suya" ON public.evaluaciones FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Admin ve evaluaciones" ON public.evaluaciones FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin'));
+-- Parametros: solo admin puede insertar/actualizar/eliminar
+CREATE POLICY "Admin gestiona parametros" ON public.parametros
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+  );
 
-CREATE POLICY "Evaluador inserta calificaciones" ON public.calificaciones FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM public.evaluaciones e WHERE e.id = evaluacion_id AND e.user_id = auth.uid()));
-CREATE POLICY "Evaluador lee sus calificaciones" ON public.calificaciones FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.evaluaciones e WHERE e.id = evaluacion_id AND e.user_id = auth.uid()));
-CREATE POLICY "Admin ve calificaciones" ON public.calificaciones FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin'));
+-- Evaluaciones: cualquiera puede insertar (evaluador anónimo)
+CREATE POLICY "Inserción pública de evaluaciones" ON public.evaluaciones
+  FOR INSERT WITH CHECK (true);
+
+-- Evaluaciones: solo admin puede leer
+CREATE POLICY "Admin lee evaluaciones" ON public.evaluaciones
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+  );
+
+-- Calificaciones: cualquiera puede insertar (evaluador anónimo)
+CREATE POLICY "Inserción pública de calificaciones" ON public.calificaciones
+  FOR INSERT WITH CHECK (true);
+
+-- Calificaciones: solo admin puede leer
+CREATE POLICY "Admin lee calificaciones" ON public.calificaciones
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+  );
+
+-- =============================================
+-- DATOS INICIALES: Parámetros de evaluación
+-- =============================================
 
 -- FICHA 1: Escala hedónica
 INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
@@ -121,23 +145,3 @@ INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
   ('Sabor residual desagradable', 'descriptiva', 'defectos', 5),
   ('Exceso de aceite',            'descriptiva', 'defectos', 6),
   ('Otros defectos',              'descriptiva', 'defectos', 7);
-
--- Trigger: crear perfil al registrarse
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, nombre, email, rol)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'nombre', split_part(NEW.email, '@', 1)),
-    NEW.email,
-    'evaluador'
-  )
-  ON CONFLICT (id) DO NOTHING;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

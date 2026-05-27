@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
+import { createClient } from "@/server/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,22 +22,22 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.push("/");
+    router.push("/admin");
     router.refresh();
   }
 
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <span style={styles.emoji}>🍞</span>
-        <h1 style={styles.title}>Budín Nutritivo</h1>
-        <p style={styles.subtitle}>Sistema de evaluación sensorial</p>
+        <span style={styles.emoji}>🔒</span>
+        <h1 style={styles.title}>Panel Admin</h1>
+        <p style={styles.subtitle}>Acceso restringido a administradores</p>
       </div>
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.field}>
           <label style={styles.label}>Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="tu@email.com" required style={styles.input} />
+            placeholder="admin@email.com" required style={styles.input} />
         </div>
         <div style={styles.field}>
           <label style={styles.label}>Contraseña</label>
@@ -50,10 +49,6 @@ export default function LoginPage() {
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
-      <p style={styles.footer}>
-        ¿No tenés cuenta?{" "}
-        <Link href="/register" style={styles.link}>Registrarse</Link>
-      </p>
     </div>
   );
 }
@@ -70,6 +65,4 @@ const styles: Record<string, React.CSSProperties> = {
   input: { padding: "0.75rem 1rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontSize: "1rem", outline: "none" },
   error: { color: "var(--danger)", fontSize: "0.875rem", background: "#fef2f2", padding: "0.75rem", borderRadius: "8px" },
   button: { background: "var(--primary)", color: "#fff", border: "none", borderRadius: "8px", padding: "0.875rem", fontSize: "1rem", fontWeight: 600, marginTop: "0.5rem", cursor: "pointer" },
-  footer: { textAlign: "center", marginTop: "1.5rem", color: "var(--text-muted)", fontSize: "0.9rem" },
-  link: { color: "var(--primary)", fontWeight: 600 },
 };
