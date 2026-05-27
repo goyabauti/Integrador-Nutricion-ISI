@@ -7,56 +7,50 @@ import { RatingSlider } from "@/components/ui/RatingSlider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { ThankYou } from "@/components/ThankYou";
 
-// Tipos locales basados en tu schema
-type Parametro = { id: number; nombre: string; ficha: string; categoria: string | null };
+// Tipo basado en la tabla questions del schema
+type Question = { id: number; text: string; order_index: number; category: string | null };
 
 export default function EvaluarPage() {
-  const [parametros, setParametros] = useState<Parametro[]>([]);
-  const [loadingParametros, setLoadingParametros] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
   // Estado del formulario
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [comentario, setComentario] = useState("");
-  const [calificaciones, setCalificaciones] = useState<Record<number, number>>({});
-  const [erroresCampos, setErroresCampos] = useState<Record<string, string>>({});
+  const [comment, setComment] = useState("");
+  const [scores, setScores] = useState<Record<number, number>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Cargar parámetros de la API (por ahora usamos una lista mock hasta que la API esté lista)
-    // Cuando la API de GET /api/parametros devuelva los datos reales, se reemplaza esto.
-    const fetchParametros = async () => {
+    const fetchQuestions = async () => {
       try {
-        // Simulación: los parámetros hedónicos del schema
-        const mockParametros = [
-          { id: 1, nombre: "Sabor", ficha: "hedonica", categoria: null },
-          { id: 2, nombre: "Olor / Aroma", ficha: "hedonica", categoria: null },
-          { id: 3, nombre: "Color", ficha: "hedonica", categoria: null },
-          { id: 4, nombre: "Textura", ficha: "hedonica", categoria: null },
-          { id: 5, nombre: "Humedad", ficha: "hedonica", categoria: null },
-          { id: 6, nombre: "Aceptación general", ficha: "hedonica", categoria: null },
-        ];
-        setParametros(mockParametros);
-      } catch (err) {
+        const res = await fetch("/api/parametros");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setQuestions(json.data);
+        } else {
+          setError("Error al cargar la encuesta. Por favor, recarga la página.");
+        }
+      } catch {
         setError("Error al cargar la encuesta. Por favor, recarga la página.");
       } finally {
-        setLoadingParametros(false);
+        setLoadingQuestions(false);
       }
     };
 
-    fetchParametros();
+    fetchQuestions();
   }, []);
 
-  const handleRatingChange = (paramId: number, value: number) => {
-    setCalificaciones(prev => ({ ...prev, [paramId]: value }));
+  const handleRatingChange = (questionId: number, value: number) => {
+    setScores(prev => ({ ...prev, [questionId]: value }));
     // Limpiar error de ese campo si lo había
-    if (erroresCampos[`param_${paramId}`]) {
-      setErroresCampos(prev => {
+    if (fieldErrors[`q_${questionId}`]) {
+      setFieldErrors(prev => {
         const next = { ...prev };
-        delete next[`param_${paramId}`];
+        delete next[`q_${questionId}`];
         return next;
       });
     }
@@ -64,18 +58,17 @@ export default function EvaluarPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!nombre.trim()) newErrors.nombre = "Requerido";
-    if (!apellido.trim()) newErrors.apellido = "Requerido";
+    if (!name.trim()) newErrors.name = "Requerido";
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email inválido";
 
-    // Validar que todos los parámetros hayan sido evaluados
-    parametros.forEach(p => {
-      if (!calificaciones[p.id]) {
-        newErrors[`param_${p.id}`] = "Por favor, evaluá este atributo";
+    // Validar que todas las questions hayan sido evaluadas
+    questions.forEach(q => {
+      if (!scores[q.id]) {
+        newErrors[`q_${q.id}`] = "Por favor, evaluá este atributo";
       }
     });
 
-    setErroresCampos(newErrors);
+    setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -92,34 +85,40 @@ export default function EvaluarPage() {
     setLoadingSubmit(true);
 
     try {
-      // Formatear payload para la API
       const payload = {
-        nombre,
-        apellido,
+        name,
         email,
-        comentario: comentario.trim() || undefined,
-        calificaciones: Object.entries(calificaciones).map(([paramId, valor]) => ({
-          parametro_id: Number(paramId),
-          valor
+        comment: comment.trim() || undefined,
+        responses: Object.entries(scores).map(([questionId, score]) => ({
+          question_id: Number(questionId),
+          score
         }))
       };
 
-      // TODO: Llamar a la API real POST /api/evaluaciones
-      // Por ahora simulamos delay de red
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log("Enviado:", payload);
+      const res = await fetch("/api/evaluaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        setError(json.error || "Ocurrió un error al enviar tu evaluación. Intentá nuevamente.");
+        return;
+      }
+
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    } catch (err) {
+    } catch {
       setError("Ocurrió un error al enviar tu evaluación. Intentá nuevamente.");
     } finally {
       setLoadingSubmit(false);
     }
   };
 
-  if (loadingParametros) {
+  if (loadingQuestions) {
     return (
       <div style={{ display: "flex", justifyContent: "center", padding: "4rem" }}>
         <p>Cargando encuesta...</p>
@@ -163,33 +162,20 @@ export default function EvaluarPage() {
             <CardDescription>Para saber quién nos ayuda a mejorar</CardDescription>
           </CardHeader>
           <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <div style={{ flex: "1 1 200px" }}>
-                <Input 
-                  label="Nombre" 
-                  placeholder="Ej: María" 
-                  value={nombre} 
-                  onChange={e => setNombre(e.target.value)}
-                  error={erroresCampos.nombre}
-                />
-              </div>
-              <div style={{ flex: "1 1 200px" }}>
-                <Input 
-                  label="Apellido" 
-                  placeholder="Ej: García" 
-                  value={apellido} 
-                  onChange={e => setApellido(e.target.value)}
-                  error={erroresCampos.apellido}
-                />
-              </div>
-            </div>
+            <Input 
+              label="Nombre" 
+              placeholder="Ej: María García" 
+              value={name} 
+              onChange={e => setName(e.target.value)}
+              error={fieldErrors.name}
+            />
             <Input 
               label="Email" 
               type="email" 
               placeholder="tu@email.com" 
               value={email} 
               onChange={e => setEmail(e.target.value)}
-              error={erroresCampos.email}
+              error={fieldErrors.email}
             />
           </CardContent>
         </Card>
@@ -198,18 +184,18 @@ export default function EvaluarPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <h2 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>Propiedades de la muestra</h2>
           
-          {parametros.map(param => (
+          {questions.map(q => (
             <RatingSlider
-              key={param.id}
-              label={param.nombre}
-              value={calificaciones[param.id] || 0}
-              onChange={(val) => handleRatingChange(param.id, val)}
-              error={erroresCampos[`param_${param.id}`]}
+              key={q.id}
+              label={q.text}
+              value={scores[q.id] || 0}
+              onChange={(val) => handleRatingChange(q.id, val)}
+              error={fieldErrors[`q_${q.id}`]}
             />
           ))}
         </div>
 
-        {/* Notas Optativas */}
+        {/* Comentarios */}
         <Card>
           <CardHeader>
             <CardTitle>Comentarios adicionales</CardTitle>
@@ -220,8 +206,8 @@ export default function EvaluarPage() {
               label="Notas optativas" 
               multiline 
               placeholder="¿Qué te pareció? ¿Algo que destacarías o mejorarías?" 
-              value={comentario} 
-              onChange={e => setComentario(e.target.value)}
+              value={comment} 
+              onChange={e => setComment(e.target.value)}
             />
           </CardContent>
         </Card>

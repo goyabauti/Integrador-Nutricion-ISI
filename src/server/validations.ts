@@ -1,4 +1,4 @@
-import type { EvaluacionInput, CalificacionInput } from "@/types";
+import type { SurveySubmission, ResponseInput } from "@/types";
 
 /**
  * Validaciones reutilizables para los datos de entrada de las API routes.
@@ -12,9 +12,9 @@ export function isPositiveInt(value: unknown): value is number {
 }
 
 /**
- * Valida que un valor de escala hedónica sea válido (1-5).
+ * Valida que un score de escala hedónica sea válido (1-5).
  */
-export function isValidEscalaHedonica(valor: unknown): valor is number {
+export function isValidScore(valor: unknown): valor is number {
   return typeof valor === "number" && Number.isInteger(valor) && valor >= 1 && valor <= 5;
 }
 
@@ -34,21 +34,21 @@ export function isValidEmail(value: unknown): value is string {
 }
 
 /**
- * Valida la estructura de una calificación individual.
+ * Valida la estructura de una response individual.
  */
-export function isValidCalificacion(cal: unknown): cal is CalificacionInput {
-  if (typeof cal !== "object" || cal === null) return false;
-  const c = cal as Record<string, unknown>;
-  return isPositiveInt(c.parametro_id) && isValidEscalaHedonica(c.valor);
+export function isValidResponseInput(r: unknown): r is ResponseInput {
+  if (typeof r !== "object" || r === null) return false;
+  const obj = r as Record<string, unknown>;
+  return isPositiveInt(obj.question_id) && isValidScore(obj.score);
 }
 
 /**
- * Valida el body completo de una nueva evaluación (evaluador anónimo).
+ * Valida el body completo de un nuevo survey submission (evaluador anónimo).
  */
-export function validateEvaluacionBody(body: unknown): {
+export function validateSurveySubmission(body: unknown): {
   valid: boolean;
   error?: string;
-  data?: EvaluacionInput;
+  data?: SurveySubmission;
 } {
   if (typeof body !== "object" || body === null) {
     return { valid: false, error: "Body inválido" };
@@ -56,27 +56,24 @@ export function validateEvaluacionBody(body: unknown): {
 
   const b = body as Record<string, unknown>;
 
-  // Validar datos personales del evaluador
-  if (!isNonEmptyString(b.nombre)) {
+  // Validar datos del evaluador
+  if (!isNonEmptyString(b.name)) {
     return { valid: false, error: "El nombre es obligatorio" };
-  }
-  if (!isNonEmptyString(b.apellido)) {
-    return { valid: false, error: "El apellido es obligatorio" };
   }
   if (!isValidEmail(b.email)) {
     return { valid: false, error: "El email no es válido" };
   }
 
-  // Validar calificaciones
-  if (!Array.isArray(b.calificaciones) || b.calificaciones.length === 0) {
-    return { valid: false, error: "Se requiere al menos una calificación" };
+  // Validar responses
+  if (!Array.isArray(b.responses) || b.responses.length === 0) {
+    return { valid: false, error: "Se requiere al menos una respuesta" };
   }
 
-  for (const cal of b.calificaciones) {
-    if (!isValidCalificacion(cal)) {
+  for (const r of b.responses) {
+    if (!isValidResponseInput(r)) {
       return {
         valid: false,
-        error: "Calificación inválida: cada una necesita parametro_id (entero) y valor (1-5)",
+        error: "Respuesta inválida: cada una necesita question_id (entero) y score (1-5)",
       };
     }
   }
@@ -84,14 +81,12 @@ export function validateEvaluacionBody(body: unknown): {
   return {
     valid: true,
     data: {
-      nombre: (b.nombre as string).trim(),
-      apellido: (b.apellido as string).trim(),
+      name: (b.name as string).trim(),
       email: (b.email as string).trim().toLowerCase(),
-      comentario: typeof b.comentario === "string" ? b.comentario.trim() : undefined,
-      calificaciones: b.calificaciones.map((c: Record<string, unknown>) => ({
-        parametro_id: c.parametro_id as number,
-        valor: c.valor as number,
-        observacion: typeof c.observacion === "string" ? c.observacion : undefined,
+      comment: typeof b.comment === "string" && b.comment.trim() ? b.comment.trim() : undefined,
+      responses: b.responses.map((r: Record<string, unknown>) => ({
+        question_id: r.question_id as number,
+        score: r.score as number,
       })),
     },
   };

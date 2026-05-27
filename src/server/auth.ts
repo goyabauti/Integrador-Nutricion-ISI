@@ -1,30 +1,31 @@
 import { createServerSupabaseClient } from "@/server/supabase/server";
-import type { Profile } from "@/types";
+import type { UserRole } from "@/types";
 
 /**
- * Obtiene el perfil de admin del usuario actual a partir de la sesión.
+ * Obtiene el rol de admin del usuario actual a partir de la sesión.
  * Retorna null si no hay sesión o no es admin.
  */
-export async function getCurrentAdmin(): Promise<Profile | null> {
+export async function getCurrentAdmin(): Promise<UserRole | null> {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: userRole } = await supabase
+    .from("user_roles")
     .select("*")
-    .eq("id", user.id)
+    .eq("user_id", user.id)
+    .eq("role", "admin")
     .single();
 
-  if (!profile || profile.rol !== "admin") return null;
+  if (!userRole) return null;
 
-  return profile as Profile;
+  return userRole as UserRole;
 }
 
 /**
  * Verifica que el usuario actual sea admin.
- * Retorna el perfil si es admin, o null si no lo es / no hay sesión.
+ * Retorna el UserRole si es admin, o null si no lo es / no hay sesión.
  */
-export async function requireAdmin(): Promise<Profile | null> {
+export async function requireAdmin(): Promise<UserRole | null> {
   return getCurrentAdmin();
 }

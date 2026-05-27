@@ -1,147 +1,189 @@
 -- =============================================
 -- SCHEMA: Evaluación de Budín Nutritivo
--- Escala hedónica 1-5
--- Ficha 1: Hedónica | Ficha 2: Descriptiva
+-- Basado en el diagrama de Supabase
 -- =============================================
 -- FLUJO:
---   Evaluadores: NO necesitan cuenta. Ponen nombre, apellido y email.
+--   Respondents (evaluadores): NO necesitan cuenta. Ponen nombre y email.
 --   Admin: Sí necesita cuenta (auth de Supabase) para ver resultados.
 -- =============================================
 
 -- Limpiar tablas existentes
-DROP TABLE IF EXISTS public.calificaciones CASCADE;
-DROP TABLE IF EXISTS public.evaluaciones CASCADE;
-DROP TABLE IF EXISTS public.parametros CASCADE;
-DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TABLE IF EXISTS public.responses CASCADE;
+DROP TABLE IF EXISTS public.comments CASCADE;
+DROP TABLE IF EXISTS public.respondents CASCADE;
+DROP TABLE IF EXISTS public.questions CASCADE;
+DROP TABLE IF EXISTS public.user_roles CASCADE;
 
--- 1. Perfiles (solo admin)
---    Se crea manualmente en Supabase para cada admin.
-CREATE TABLE public.profiles (
-  id         UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  nombre     TEXT NOT NULL,
-  email      TEXT NOT NULL,
-  rol        TEXT NOT NULL DEFAULT 'admin' CHECK (rol IN ('admin')),
+-- 1. user_roles (admin auth)
+--    Vinculado a auth.users de Supabase.
+CREATE TABLE public.user_roles (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id    UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role       TEXT NOT NULL DEFAULT 'admin',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Parámetros de evaluación
---    ficha:     'hedonica' | 'descriptiva'
---    categoria: NULL (para hedónica) | 'positivos' | 'generales' | 'defectos'
-CREATE TABLE public.parametros (
-  id          SERIAL PRIMARY KEY,
-  nombre      TEXT NOT NULL,
-  descripcion TEXT,
-  ficha       TEXT NOT NULL CHECK (ficha IN ('hedonica', 'descriptiva')),
-  categoria   TEXT CHECK (categoria IN ('positivos', 'generales', 'defectos')),
-  activo      BOOLEAN DEFAULT TRUE,
-  orden       INTEGER DEFAULT 0
-);
-
--- 3. Evaluaciones (datos del evaluador directo, SIN cuenta)
-CREATE TABLE public.evaluaciones (
-  id          SERIAL PRIMARY KEY,
-  nombre      TEXT NOT NULL,
-  apellido    TEXT NOT NULL,
-  email       TEXT NOT NULL,
-  comentario  TEXT,
+-- 2. questions (parámetros de evaluación)
+CREATE TABLE public.questions (
+  id          INT4 GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  order_index INT4 NOT NULL DEFAULT 0,
+  text        TEXT NOT NULL,
+  category    TEXT,
+  active      BOOLEAN DEFAULT TRUE,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Calificaciones (valor 1-5 hedónico, observación opcional)
-CREATE TABLE public.calificaciones (
-  id            SERIAL PRIMARY KEY,
-  evaluacion_id INTEGER REFERENCES public.evaluaciones(id) ON DELETE CASCADE NOT NULL,
-  parametro_id  INTEGER REFERENCES public.parametros(id) ON DELETE CASCADE NOT NULL,
-  valor         INTEGER NOT NULL CHECK (valor BETWEEN 1 AND 5),
-  observacion   TEXT,
-  UNIQUE(evaluacion_id, parametro_id)
+-- 3. respondents (evaluadores anónimos, sin cuenta)
+CREATE TABLE public.respondents (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name       TEXT NOT NULL,
+  email      TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. responses (calificaciones, score 1-5)
+CREATE TABLE public.responses (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  respondent_id UUID REFERENCES public.respondents(id) ON DELETE CASCADE NOT NULL,
+  question_id   INT4 REFERENCES public.questions(id) ON DELETE CASCADE NOT NULL,
+  score         INT4 NOT NULL CHECK (score BETWEEN 1 AND 5),
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(respondent_id, question_id)
+);
+
+-- 5. comments (comentarios opcionales del evaluador)
+CREATE TABLE public.comments (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  respondent_id UUID REFERENCES public.respondents(id) ON DELETE CASCADE NOT NULL,
+  content       TEXT NOT NULL,
+  is_visible    BOOLEAN DEFAULT TRUE,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- =============================================
 -- RLS (Row Level Security)
 -- =============================================
-ALTER TABLE public.profiles       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.parametros     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.evaluaciones   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.calificaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.questions    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.respondents  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.responses    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments     ENABLE ROW LEVEL SECURITY;
 
--- Profiles: solo el admin ve/edita su propio perfil
-CREATE POLICY "Perfil propio" ON public.profiles
-  FOR ALL USING (auth.uid() = id);
+-- user_roles: solo el admin ve su propio rol
+DROP POLICY IF EXISTS "Rol propio" ON public.user_roles;
+CREATE POLICY "Rol propio" ON public.user_roles
+  FOR ALL USING (auth.uid() = user_id);
 
--- Parametros: cualquiera puede leer (incluso anónimos, para el formulario)
-CREATE POLICY "Lectura pública de parametros" ON public.parametros
+-- questions: cualquiera puede leer (necesario para el formulario público)
+DROP POLICY IF EXISTS "Lectura pública de questions" ON public.questions;
+CREATE POLICY "Lectura pública de questions" ON public.questions
   FOR SELECT USING (true);
 
--- Parametros: solo admin puede insertar/actualizar/eliminar
-CREATE POLICY "Admin gestiona parametros" ON public.parametros
+-- questions: solo admin puede insertar/actualizar/eliminar
+DROP POLICY IF EXISTS "Admin gestiona questions" ON public.questions;
+CREATE POLICY "Admin gestiona questions" ON public.questions
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+    EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
--- Evaluaciones: cualquiera puede insertar (evaluador anónimo)
-CREATE POLICY "Inserción pública de evaluaciones" ON public.evaluaciones
+-- respondents: cualquiera puede insertar (evaluador anónimo)
+DROP POLICY IF EXISTS "Inserción pública de respondents" ON public.respondents;
+CREATE POLICY "Inserción pública de respondents" ON public.respondents
   FOR INSERT WITH CHECK (true);
 
--- Evaluaciones: solo admin puede leer
-CREATE POLICY "Admin lee evaluaciones" ON public.evaluaciones
+-- respondents: solo admin puede leer
+DROP POLICY IF EXISTS "Admin lee respondents" ON public.respondents;
+CREATE POLICY "Admin lee respondents" ON public.respondents
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+    EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
--- Calificaciones: cualquiera puede insertar (evaluador anónimo)
-CREATE POLICY "Inserción pública de calificaciones" ON public.calificaciones
+-- responses: cualquiera puede insertar (evaluador anónimo)
+DROP POLICY IF EXISTS "Inserción pública de responses" ON public.responses;
+CREATE POLICY "Inserción pública de responses" ON public.responses
   FOR INSERT WITH CHECK (true);
 
--- Calificaciones: solo admin puede leer
-CREATE POLICY "Admin lee calificaciones" ON public.calificaciones
+-- responses: solo admin puede leer
+DROP POLICY IF EXISTS "Admin lee responses" ON public.responses;
+CREATE POLICY "Admin lee responses" ON public.responses
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.rol = 'admin')
+    EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
+  );
+
+-- comments: cualquiera puede insertar (evaluador anónimo)
+DROP POLICY IF EXISTS "Inserción pública de comments" ON public.comments;
+CREATE POLICY "Inserción pública de comments" ON public.comments
+  FOR INSERT WITH CHECK (true);
+
+-- comments: solo admin puede leer
+DROP POLICY IF EXISTS "Admin lee comments" ON public.comments;
+CREATE POLICY "Admin lee comments" ON public.comments
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
 -- =============================================
--- DATOS INICIALES: Parámetros de evaluación
+-- GRANT: Permisos de rol
 -- =============================================
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
 
--- FICHA 1: Escala hedónica
-INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
-  ('Sabor',              'hedonica', NULL, 1),
-  ('Olor / Aroma',       'hedonica', NULL, 2),
-  ('Color',              'hedonica', NULL, 3),
-  ('Textura',            'hedonica', NULL, 4),
-  ('Humedad',            'hedonica', NULL, 5),
-  ('Aceptación general', 'hedonica', NULL, 6);
+GRANT SELECT ON public.questions TO anon;
+GRANT INSERT ON public.respondents TO anon;
+GRANT INSERT ON public.responses TO anon;
+GRANT INSERT ON public.comments TO anon;
 
--- FICHA 2: Atributos positivos
-INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
-  ('Manzana',            'descriptiva', 'positivos', 1),
-  ('Zucchini',           'descriptiva', 'positivos', 2),
-  ('Huevo',              'descriptiva', 'positivos', 3),
-  ('Esencia de vainilla','descriptiva', 'positivos', 4),
-  ('Azúcar rubia',       'descriptiva', 'positivos', 5),
-  ('Lentejas',           'descriptiva', 'positivos', 6),
-  ('Harina de avena',    'descriptiva', 'positivos', 7),
-  ('Cacao amargo',       'descriptiva', 'positivos', 8),
-  ('Aceite',             'descriptiva', 'positivos', 9),
-  ('Polvo de hornear',   'descriptiva', 'positivos', 10);
+GRANT ALL ON public.user_roles TO authenticated;
+GRANT ALL ON public.questions TO authenticated;
+GRANT ALL ON public.respondents TO authenticated;
+GRANT ALL ON public.responses TO authenticated;
+GRANT ALL ON public.comments TO authenticated;
 
--- FICHA 2: Atributos generales
-INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
-  ('Aroma dulce',            'descriptiva', 'generales', 1),
-  ('Aroma tostado',          'descriptiva', 'generales', 2),
-  ('Aroma vegetal',          'descriptiva', 'generales', 3),
-  ('Humedad',                'descriptiva', 'generales', 4),
-  ('Esponjosidad',           'descriptiva', 'generales', 5),
-  ('Suavidad en boca',       'descriptiva', 'generales', 6),
-  ('Persistencia del sabor', 'descriptiva', 'generales', 7),
-  ('Balance general',        'descriptiva', 'generales', 8);
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
--- FICHA 2: Defectos
-INSERT INTO public.parametros (nombre, ficha, categoria, orden) VALUES
-  ('Sabor metálico',              'descriptiva', 'defectos', 1),
-  ('Amargor excesivo',            'descriptiva', 'defectos', 2),
-  ('Aroma artificial',            'descriptiva', 'defectos', 3),
-  ('Sequedad',                    'descriptiva', 'defectos', 4),
-  ('Sabor residual desagradable', 'descriptiva', 'defectos', 5),
-  ('Exceso de aceite',            'descriptiva', 'defectos', 6),
-  ('Otros defectos',              'descriptiva', 'defectos', 7);
+-- =============================================
+-- DATOS INICIALES: Questions (escala hedónica)
+
+-- =============================================
+INSERT INTO public.questions (order_index, text, category) VALUES
+  (1, 'Sabor',              'hedonica'),
+  (2, 'Olor / Aroma',       'hedonica'),
+  (3, 'Color',              'hedonica'),
+  (4, 'Textura',            'hedonica'),
+  (5, 'Humedad',            'hedonica'),
+  (6, 'Aceptación general', 'hedonica');
+
+-- Atributos positivos (descriptiva)
+INSERT INTO public.questions (order_index, text, category) VALUES
+  (7,  'Manzana',             'positivos'),
+  (8,  'Zucchini',            'positivos'),
+  (9,  'Huevo',               'positivos'),
+  (10, 'Esencia de vainilla', 'positivos'),
+  (11, 'Azúcar rubia',        'positivos'),
+  (12, 'Lentejas',            'positivos'),
+  (13, 'Harina de avena',     'positivos'),
+  (14, 'Cacao amargo',        'positivos'),
+  (15, 'Aceite',              'positivos'),
+  (16, 'Polvo de hornear',    'positivos');
+
+-- Atributos generales (descriptiva)
+INSERT INTO public.questions (order_index, text, category) VALUES
+  (17, 'Aroma dulce',            'generales'),
+  (18, 'Aroma tostado',          'generales'),
+  (19, 'Aroma vegetal',          'generales'),
+  (20, 'Humedad',                'generales'),
+  (21, 'Esponjosidad',           'generales'),
+  (22, 'Suavidad en boca',       'generales'),
+  (23, 'Persistencia del sabor', 'generales'),
+  (24, 'Balance general',        'generales');
+
+-- Defectos (descriptiva)
+INSERT INTO public.questions (order_index, text, category) VALUES
+  (25, 'Sabor metálico',              'defectos'),
+  (26, 'Amargor excesivo',            'defectos'),
+  (27, 'Aroma artificial',            'defectos'),
+  (28, 'Sequedad',                    'defectos'),
+  (29, 'Sabor residual desagradable', 'defectos'),
+  (30, 'Exceso de aceite',            'defectos'),
+  (31, 'Otros defectos',              'defectos');

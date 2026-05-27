@@ -1,39 +1,66 @@
-import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/server/supabase/server";
+import { successResponse, errorResponse, notFoundResponse, serverErrorResponse } from "@/server/api-response";
+import { requireAdmin } from "@/server/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/evaluaciones/:id
- * Devuelve una evaluación con sus calificaciones.
+ * Devuelve un respondent con sus responses (incluyendo info de la question) y comments.
  * Acceso: solo admin.
  */
 export async function GET(request: Request, { params }: Params) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return errorResponse("No autorizado", 401);
+    }
 
-  // TODO: verificar que es admin con requireAdmin()
-  // TODO: obtener evaluación + calificaciones + nombre del parámetro
-  // const { data, error } = await supabase
-  //   .from("evaluaciones")
-  //   .select("*, calificaciones(*, parametros(nombre, ficha, categoria))")
-  //   .eq("id", id)
-  //   .single();
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
 
-  return NextResponse.json({ message: `GET /api/evaluaciones/${id} — pendiente` });
+    const { data, error } = await supabase
+      .from("respondents")
+      .select("*, responses(*, questions(text, category)), comments(*)")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return notFoundResponse("Evaluación no encontrada");
+    }
+
+    return successResponse(data);
+  } catch {
+    return serverErrorResponse();
+  }
 }
 
 /**
  * DELETE /api/evaluaciones/:id
- * Elimina una evaluación y sus calificaciones.
+ * Elimina un respondent y sus responses/comments (CASCADE).
  * Acceso: solo admin.
  */
 export async function DELETE(request: Request, { params }: Params) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return errorResponse("No autorizado", 401);
+    }
 
-  // TODO: verificar que es admin con requireAdmin()
-  // TODO: eliminar evaluación (CASCADE borra calificaciones)
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
 
-  return NextResponse.json({ message: `DELETE /api/evaluaciones/${id} — pendiente` });
+    const { error } = await supabase
+      .from("respondents")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return serverErrorResponse(error.message);
+    }
+
+    return successResponse({ message: "Evaluación eliminada" });
+  } catch {
+    return serverErrorResponse();
+  }
 }

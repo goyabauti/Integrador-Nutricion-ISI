@@ -1,45 +1,110 @@
-import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/server/supabase/server";
+import { successResponse, errorResponse, notFoundResponse, serverErrorResponse } from "@/server/api-response";
+import { requireAdmin } from "@/server/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/parametros/:id
- * Devuelve un parámetro por su ID.
+ * Devuelve una question por su ID.
  */
 export async function GET(request: Request, { params }: Params) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
 
-  // TODO: implementar obtener parámetro por id
+    const { data, error } = await supabase
+      .from("questions")
+      .select("*")
+      .eq("id", Number(id))
+      .single();
 
-  return NextResponse.json({ message: `GET /api/parametros/${id} — pendiente` });
+    if (error || !data) {
+      return notFoundResponse("Pregunta no encontrada");
+    }
+
+    return successResponse(data);
+  } catch {
+    return serverErrorResponse();
+  }
 }
 
 /**
  * PATCH /api/parametros/:id
- * Actualiza un parámetro existente.
+ * Actualiza una question existente.
  * Acceso: solo admin.
  */
 export async function PATCH(request: Request, { params }: Params) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return errorResponse("No autorizado", 401);
+    }
 
-  // TODO: verificar admin, validar body, actualizar parámetro
+    const { id } = await params;
+    const body = await request.json();
+    const supabase = await createServerSupabaseClient();
 
-  return NextResponse.json({ message: `PATCH /api/parametros/${id} — pendiente` });
+    // Solo permitir actualizar campos válidos
+    const updates: Record<string, unknown> = {};
+    if (body.text !== undefined) updates.text = body.text;
+    if (body.category !== undefined) updates.category = body.category;
+    if (body.order_index !== undefined) updates.order_index = body.order_index;
+    if (body.active !== undefined) updates.active = body.active;
+
+    const { data, error } = await supabase
+      .from("questions")
+      .update(updates)
+      .eq("id", Number(id))
+      .select()
+      .single();
+
+    if (error) {
+      return serverErrorResponse(error.message);
+    }
+
+    if (!data) {
+      return notFoundResponse("Pregunta no encontrada");
+    }
+
+    return successResponse(data);
+  } catch {
+    return serverErrorResponse();
+  }
 }
 
 /**
  * DELETE /api/parametros/:id
- * Desactiva (soft delete) un parámetro.
+ * Desactiva (soft delete) una question.
  * Acceso: solo admin.
  */
 export async function DELETE(request: Request, { params }: Params) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return errorResponse("No autorizado", 401);
+    }
 
-  // TODO: verificar admin, desactivar parámetro (activo = false)
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
 
-  return NextResponse.json({ message: `DELETE /api/parametros/${id} — pendiente` });
+    const { data, error } = await supabase
+      .from("questions")
+      .update({ active: false })
+      .eq("id", Number(id))
+      .select()
+      .single();
+
+    if (error) {
+      return serverErrorResponse(error.message);
+    }
+
+    if (!data) {
+      return notFoundResponse("Pregunta no encontrada");
+    }
+
+    return successResponse({ message: "Pregunta desactivada" });
+  } catch {
+    return serverErrorResponse();
+  }
 }

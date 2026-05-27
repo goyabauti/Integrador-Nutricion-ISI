@@ -7,9 +7,9 @@ export default async function Home() {
 
   // Si es admin logueado, ir al panel admin
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles").select("rol").eq("id", user.id).single();
-    if (profile?.rol === "admin") redirect("/admin");
+    const { data: userRole } = await supabase
+      .from("user_roles").select("role").eq("user_id", user.id).single();
+    if (userRole?.role === "admin") redirect("/admin");
   }
 
   // Si no está logueado (evaluador anónimo), ir al formulario de evaluación

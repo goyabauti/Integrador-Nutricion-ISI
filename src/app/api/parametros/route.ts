@@ -1,35 +1,64 @@
-import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/server/supabase/server";
+import { successResponse, errorResponse, serverErrorResponse } from "@/server/api-response";
+import { requireAdmin } from "@/server/auth";
 
 /**
  * GET /api/parametros
- * Devuelve todos los parámetros activos, ordenados.
+ * Devuelve todas las questions activas, ordenadas por order_index.
  * Acceso: PÚBLICO (necesario para que el evaluador anónimo vea el formulario).
  */
 export async function GET() {
-  const supabase = await createServerSupabaseClient();
+  try {
+    const supabase = await createServerSupabaseClient();
 
-  // TODO: implementar lógica de listado de parámetros
-  // const { data, error } = await supabase
-  //   .from("parametros")
-  //   .select("*")
-  //   .eq("activo", true)
-  //   .order("ficha")
-  //   .order("orden");
+    const { data, error } = await supabase
+      .from("questions")
+      .select("*")
+      .eq("active", true)
+      .order("order_index");
 
-  return NextResponse.json({ message: "GET /api/parametros — pendiente" });
+    if (error) {
+      return serverErrorResponse(error.message);
+    }
+
+    return successResponse(data);
+  } catch {
+    return serverErrorResponse();
+  }
 }
 
 /**
  * POST /api/parametros
- * Crea un nuevo parámetro.
+ * Crea una nueva question.
  * Acceso: solo admin.
  */
 export async function POST(request: Request) {
-  const supabase = await createServerSupabaseClient();
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return errorResponse("No autorizado", 401);
+    }
 
-  // TODO: verificar que es admin con requireAdmin()
-  // TODO: validar body y crear parámetro
+    const body = await request.json();
+    const supabase = await createServerSupabaseClient();
 
-  return NextResponse.json({ message: "POST /api/parametros — pendiente" }, { status: 201 });
+    const { data, error } = await supabase
+      .from("questions")
+      .insert({
+        text: body.text,
+        category: body.category || null,
+        order_index: body.order_index || 0,
+        active: body.active ?? true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return serverErrorResponse(error.message);
+    }
+
+    return successResponse(data, 201);
+  } catch {
+    return serverErrorResponse();
+  }
 }
