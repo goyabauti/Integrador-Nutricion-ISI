@@ -132,10 +132,34 @@ export default function EvaluarPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>Evaluación Sensorial</h1>
-        <p style={{ color: "var(--coco-brown)", fontSize: "1.1rem" }}>
-          Probá la muestra que tenés ante vos y evaluá las siguientes propiedades.
+      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <span style={{ 
+          fontSize: "0.85rem", 
+          fontWeight: 600, 
+          letterSpacing: "0.15em", 
+          color: "var(--coco-caramel)", 
+          textTransform: "uppercase",
+          display: "block",
+          marginBottom: "0.5rem"
+        }}>
+          Paso 2
+        </span>
+        <h1 style={{ 
+          fontSize: "3.2rem", 
+          fontFamily: "var(--font-serif)", 
+          fontWeight: 800, 
+          lineHeight: "1.1", 
+          color: "var(--coco-dark)",
+          marginBottom: "0.75rem" 
+        }}>
+          Evalúa la muestra
+        </h1>
+        <p style={{ 
+          color: "var(--coco-brown)", 
+          fontSize: "1.15rem",
+          fontWeight: 400
+        }}>
+          Probá el budín y deslizá cada barra según tu impresión.
         </p>
       </div>
 
@@ -182,7 +206,7 @@ export default function EvaluarPage() {
 
         {/* Encuesta (Sliders) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>Propiedades de la muestra</h2>
+          
           
           {questions.map(q => (
             <RatingSlider

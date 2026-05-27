@@ -23,24 +23,42 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link href="/evaluar" style={{ 
             display: "flex", 
             alignItems: "center", 
-            gap: "0.5rem",
+            gap: "0.65rem",
             textDecoration: "none",
             color: "var(--coco-dark)",
-            fontWeight: 700,
-            fontSize: "1.25rem",
-            fontFamily: "Outfit"
+            fontWeight: 800,
+            fontSize: "1.3rem",
+            fontFamily: "var(--font-serif)"
           }}>
-            <span>🥥</span>
-            <span>NutriBudín</span>
+            <div style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              backgroundColor: "var(--coco-dark)",
+              color: "var(--coco-white)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: "1.1rem",
+              fontFamily: "var(--font-serif)",
+              boxShadow: "0 2px 5px rgba(62,39,35,0.15)"
+            }}>
+              B
+            </div>
+            <span>Budín Nutritivo</span>
           </Link>
 
           <nav style={{ display: "flex", gap: "1.5rem" }}>
             <Link href="/evaluar" style={navLinkStyle}>
-              Evaluar
+              Inicio
             </Link>
             <Link href="/producto" style={navLinkStyle}>
               Sobre el producto
             </Link>
+            <a href="#" style={navLinkStyle}>
+              Foro
+            </a>
           </nav>
         </div>
       </header>
@@ -69,8 +87,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
 const navLinkStyle = {
   textDecoration: "none",
-  color: "var(--coco-brown)",
+  color: "var(--coco-dark)",
+  opacity: 0.75,
   fontWeight: 500,
   fontSize: "0.95rem",
-  transition: "color 0.2s"
+  transition: "opacity 0.2s"
 };

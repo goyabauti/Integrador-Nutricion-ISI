@@ -15,21 +15,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={loading || props.disabled}
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "btn",
+          `btn-${variant}`,
+          `btn-${size}`,
+          loading && "btn-loading",
           className
         )}
-        style={{
-          backgroundColor: variant === "default" ? "var(--primary)" : undefined,
-          color: variant === "default" ? "white" : undefined,
-          border: variant === "outline" ? "1px solid var(--border)" : "none",
-          padding: size === "default" ? "0.75rem 1rem" : "1rem 2rem",
-          borderRadius: "8px",
-          fontWeight: 600,
-          cursor: (loading || props.disabled) ? "not-allowed" : "pointer",
-          width: "100%",
-          opacity: (loading || props.disabled) ? 0.7 : 1,
-          transition: "background-color 0.2s, transform 0.1s",
-        }}
         {...props}
       >
         {loading ? (

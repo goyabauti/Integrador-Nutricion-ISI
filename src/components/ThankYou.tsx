@@ -15,11 +15,20 @@ export function ThankYou({ onReset }: { onReset?: () => void }) {
       textAlign: "center"
     }}>
       <div style={{ 
-        fontSize: "5rem", 
-        marginBottom: "1rem",
-        animation: "bounce 2s infinite" 
+        width: "80px",
+        height: "80px",
+        borderRadius: "50%",
+        background: "var(--coco-light)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: "1.5rem",
+        color: "var(--coco-brown)",
+        boxShadow: "inset 0 2px 4px rgba(62, 39, 35, 0.05)"
       }}>
-        🎉
+        <svg style={{ width: "36px", height: "36px" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
       </div>
       
       <h2 style={{ fontSize: "2rem", marginBottom: "1rem", color: "var(--coco-dark)" }}>
