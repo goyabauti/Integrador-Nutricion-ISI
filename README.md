@@ -28,7 +28,7 @@ npm install
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local with your values
+# Edit .env.local with your values..
 ```
 
 ### 3. Run the development server
