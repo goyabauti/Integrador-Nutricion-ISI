@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,19 +7,64 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Paleta Coco */
+  --coco-cream: #FFF8F0;   /* Fondo principal */
+  --coco-beige: #F5E6D3;   /* Fondos secundarios, inputs */
+  --coco-light: #FAF0E6;   /* Hover states */
+  --coco-caramel: #D4A574; /* Acentos, sliders medios */
+  --coco-brown: #8B6F47;   /* Textos secundarios, bordes */
+  --coco-dark: #3E2723;    /* Títulos, textos principales */
+  --coco-white: #FFFFFF;   /* Cards */
+  
+  /* Estados Slider */
+  --coco-danger: #E57373;  /* 1-2 */
+  --coco-success: #81C784; /* 4-5 */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg: var(--coco-cream);
+  --bg-card: var(--coco-white);
+  --text-main: var(--coco-dark);
+  --text-muted: var(--coco-brown);
+  --primary: var(--coco-brown);
+  --primary-hover: var(--coco-dark);
+  --border: #E8D8C8;
+  
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(62, 39, 35, 0.1), 0 2px 4px -1px rgba(62, 39, 35, 0.06);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: 'Inter', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  color: var(--coco-dark);
+}
+
+/* Animaciones básicas */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--coco-cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--coco-beige);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--coco-caramel);
 }
