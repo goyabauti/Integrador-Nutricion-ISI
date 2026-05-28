@@ -70,53 +70,44 @@ ALTER TABLE public.responses    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments     ENABLE ROW LEVEL SECURITY;
 
 -- user_roles: solo el admin ve su propio rol
-DROP POLICY IF EXISTS "Rol propio" ON public.user_roles;
 CREATE POLICY "Rol propio" ON public.user_roles
   FOR ALL USING (auth.uid() = user_id);
 
 -- questions: cualquiera puede leer (necesario para el formulario público)
-DROP POLICY IF EXISTS "Lectura pública de questions" ON public.questions;
 CREATE POLICY "Lectura pública de questions" ON public.questions
   FOR SELECT USING (true);
 
 -- questions: solo admin puede insertar/actualizar/eliminar
-DROP POLICY IF EXISTS "Admin gestiona questions" ON public.questions;
 CREATE POLICY "Admin gestiona questions" ON public.questions
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
 -- respondents: cualquiera puede insertar (evaluador anónimo)
-DROP POLICY IF EXISTS "Inserción pública de respondents" ON public.respondents;
 CREATE POLICY "Inserción pública de respondents" ON public.respondents
   FOR INSERT WITH CHECK (true);
 
 -- respondents: solo admin puede leer
-DROP POLICY IF EXISTS "Admin lee respondents" ON public.respondents;
 CREATE POLICY "Admin lee respondents" ON public.respondents
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
 -- responses: cualquiera puede insertar (evaluador anónimo)
-DROP POLICY IF EXISTS "Inserción pública de responses" ON public.responses;
 CREATE POLICY "Inserción pública de responses" ON public.responses
   FOR INSERT WITH CHECK (true);
 
 -- responses: solo admin puede leer
-DROP POLICY IF EXISTS "Admin lee responses" ON public.responses;
 CREATE POLICY "Admin lee responses" ON public.responses
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
   );
 
 -- comments: cualquiera puede insertar (evaluador anónimo)
-DROP POLICY IF EXISTS "Inserción pública de comments" ON public.comments;
 CREATE POLICY "Inserción pública de comments" ON public.comments
   FOR INSERT WITH CHECK (true);
 
 -- comments: solo admin puede leer
-DROP POLICY IF EXISTS "Admin lee comments" ON public.comments;
 CREATE POLICY "Admin lee comments" ON public.comments
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin')
@@ -125,26 +116,26 @@ CREATE POLICY "Admin lee comments" ON public.comments
 -- =============================================
 -- GRANT: Permisos de rol
 -- =============================================
-GRANT USAGE ON SCHEMA public TO anon;
-GRANT USAGE ON SCHEMA public TO authenticated;
 
+-- anon: puede leer questions y crear respondents/responses/comments
 GRANT SELECT ON public.questions TO anon;
 GRANT INSERT ON public.respondents TO anon;
 GRANT INSERT ON public.responses TO anon;
 GRANT INSERT ON public.comments TO anon;
 
+-- authenticated (admin): acceso completo a todas las tablas
 GRANT ALL ON public.user_roles TO authenticated;
 GRANT ALL ON public.questions TO authenticated;
 GRANT ALL ON public.respondents TO authenticated;
 GRANT ALL ON public.responses TO authenticated;
 GRANT ALL ON public.comments TO authenticated;
 
+-- Permitir uso de secuencias (para IDENTITY en questions)
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- =============================================
 -- DATOS INICIALES: Questions (escala hedónica)
-
 -- =============================================
 INSERT INTO public.questions (order_index, text, category) VALUES
   (1, 'Sabor',              'hedonica'),
