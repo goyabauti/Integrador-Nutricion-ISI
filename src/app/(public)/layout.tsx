@@ -62,13 +62,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/producto" style={navLinkStyle}>
               Producto
             </Link>
+            <Link href="/opiniones" style={navLinkStyle}>
+              Opiniones
+            </Link>
           </nav>
         </div>
       </header>
 
       {/* Content */}
       <main style={{ flex: 1, padding: "0 1.25rem 3rem" }}>
-        <div style={{ maxWidth: "580px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
           {children}
         </div>
       </main>
