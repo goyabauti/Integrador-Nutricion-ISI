@@ -15,7 +15,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         zIndex: 50
       }}>
         <div style={{
-          maxWidth: "720px",
+          maxWidth: "1400px",
           margin: "0 auto",
           padding: "0.85rem 1.25rem",
           display: "flex",
@@ -71,7 +71,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       {/* Content */}
       <main style={{ flex: 1, padding: "0 1.25rem 3rem" }}>
-        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {children}
         </div>
       </main>

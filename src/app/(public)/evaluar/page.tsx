@@ -200,148 +200,150 @@ export default function EvaluarPage() {
   }
 
   return (
-    <div className="animate-fade-in-up">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-badge">Evaluación Sensorial</div>
-        <h1 className="hero-title">
-          Evalúa la muestra
-        </h1>
-        <p className="hero-subtitle">
-          Probá el budín y deslizá cada barra según tu impresión. Tu opinión nos ayuda a mejorar.
-        </p>
-      </div>
-
-      {/* Progress Steps */}
-      <ProgressSteps currentStep={currentStep} />
-
-      {error && (
-        <div className="alert-error" style={{ marginBottom: "1.5rem" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {error}
+    <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+      <div className="animate-fade-in-up">
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-badge">Evaluación Sensorial</div>
+          <h1 className="hero-title">
+            Evalúa la muestra
+          </h1>
+          <p className="hero-subtitle">
+            Probá el budín y deslizá cada barra según tu impresión. Tu opinión nos ayuda a mejorar.
+          </p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        {/* Progress Steps */}
+        <ProgressSteps currentStep={currentStep} />
 
-        {/* Datos Personales */}
-        <Card>
-          <CardHeader>
-            <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Tus datos
-            </CardTitle>
-            <CardDescription>Para saber quién nos ayuda a mejorar</CardDescription>
-          </CardHeader>
-          <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Input
-              label="Nombre"
-              placeholder="Ej: María García"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              error={fieldErrors.name}
-            />
-            <Input
-              label="Email"
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              error={fieldErrors.email}
-            />
-          </CardContent>
-        </Card>
+        {error && (
+          <div className="alert-error" style={{ marginBottom: "1.5rem" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            {error}
+          </div>
+        )}
 
-        {/* Questions grouped by category */}
-        {Object.entries(groupedQuestions).map(([category, qs]) => (
-          <div key={category}>
-            {/* Section header with lines */}
-            <div className="section-header">
-              <div className="section-line" />
-              <div className="section-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                {CATEGORY_ICONS[category]}
-                {CATEGORY_LABELS[category] || category}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+
+          {/* Datos Personales */}
+          <Card>
+            <CardHeader>
+              <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Tus datos
+              </CardTitle>
+              <CardDescription>Para saber quién nos ayuda a mejorar</CardDescription>
+            </CardHeader>
+            <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <Input
+                label="Nombre"
+                placeholder="Ej: María García"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                error={fieldErrors.name}
+              />
+              <Input
+                label="Email"
+                type="email"
+                placeholder="tu@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                error={fieldErrors.email}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Questions grouped by category */}
+          {Object.entries(groupedQuestions).map(([category, qs]) => (
+            <div key={category}>
+              {/* Section header with lines */}
+              <div className="section-header">
+                <div className="section-line" />
+                <div className="section-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  {CATEGORY_ICONS[category]}
+                  {CATEGORY_LABELS[category] || category}
+                </div>
+                <div className="section-line" />
               </div>
-              <div className="section-line" />
+
+              {/* Sliders for this category */}
+              <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                {qs.map(q => (
+                  <RatingSlider
+                    key={q.id}
+                    label={q.text}
+                    value={scores[q.id] || 0}
+                    onChange={(val) => handleRatingChange(q.id, val)}
+                    error={fieldErrors[`q_${q.id}`]}
+                  />
+                ))}
+              </div>
             </div>
+          ))}
 
-            {/* Sliders for this category */}
-            <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {qs.map(q => (
-                <RatingSlider
-                  key={q.id}
-                  label={q.text}
-                  value={scores[q.id] || 0}
-                  onChange={(val) => handleRatingChange(q.id, val)}
-                  error={fieldErrors[`q_${q.id}`]}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+          {/* Comentarios */}
+          <Card>
+            <CardHeader>
+              <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+                Comentarios
+              </CardTitle>
+              <CardDescription>Opcional — contanos qué te pareció</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input
+                label="Notas"
+                multiline
+                placeholder="¿Qué destacarías? ¿Qué mejorarías?"
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Comentarios */}
-        <Card>
-          <CardHeader>
-            <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
-              Comentarios
-            </CardTitle>
-            <CardDescription>Opcional — contanos qué te pareció</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Input
-              label="Notas"
-              multiline
-              placeholder="¿Qué destacarías? ¿Qué mejorarías?"
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Progress indicator */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 0.25rem",
-          fontSize: "0.85rem",
-          color: "var(--coco-brown)"
-        }}>
-          <span>{answeredCount} de {totalQuestions} atributos evaluados</span>
+          {/* Progress indicator */}
           <div style={{
-            width: "120px",
-            height: "4px",
-            background: "var(--coco-beige)",
-            borderRadius: "2px",
-            overflow: "hidden"
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 0.25rem",
+            fontSize: "0.85rem",
+            color: "var(--coco-brown)"
           }}>
+            <span>{answeredCount} de {totalQuestions} atributos evaluados</span>
             <div style={{
-              height: "100%",
-              width: totalQuestions > 0 ? `${(answeredCount / totalQuestions) * 100}%` : "0%",
-              background: answeredCount === totalQuestions ? "var(--coco-caramel)" : "var(--coco-dark)",
+              width: "120px",
+              height: "4px",
+              background: "var(--coco-beige)",
               borderRadius: "2px",
-              transition: "width 0.3s ease"
-            }} />
+              overflow: "hidden"
+            }}>
+              <div style={{
+                height: "100%",
+                width: totalQuestions > 0 ? `${(answeredCount / totalQuestions) * 100}%` : "0%",
+                background: answeredCount === totalQuestions ? "var(--coco-caramel)" : "var(--coco-dark)",
+                borderRadius: "2px",
+                transition: "width 0.3s ease"
+              }} />
+            </div>
           </div>
-        </div>
 
-        {/* Submit */}
-        <Button size="lg" type="submit" loading={loadingSubmit}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-          Enviar evaluación
-        </Button>
-      </form>
+          {/* Submit */}
+          <Button size="lg" type="submit" loading={loadingSubmit}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+            Enviar evaluación
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
