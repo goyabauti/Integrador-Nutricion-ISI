@@ -4,18 +4,20 @@ import React from "react";
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Navbar simplificado */}
+      {/* Header */}
       <header style={{ 
-        background: "var(--coco-white)", 
+        background: "rgba(255,255,255,0.85)", 
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--border)",
         position: "sticky",
         top: 0,
-        zIndex: 10
+        zIndex: 50
       }}>
         <div style={{
-          maxWidth: "800px",
+          maxWidth: "720px",
           margin: "0 auto",
-          padding: "1rem",
+          padding: "0.85rem 1.25rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center"
@@ -25,16 +27,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             alignItems: "center", 
             gap: "0.65rem",
             textDecoration: "none",
-            color: "var(--coco-dark)",
-            fontWeight: 800,
-            fontSize: "1.3rem",
-            fontFamily: "var(--font-serif)"
+            color: "var(--coco-dark)"
           }}>
             <div style={{
-              width: "36px",
-              height: "36px",
+              width: "38px",
+              height: "38px",
               borderRadius: "50%",
-              backgroundColor: "var(--coco-dark)",
+              background: "var(--coco-dark)",
               color: "var(--coco-white)",
               display: "flex",
               alignItems: "center",
@@ -42,30 +41,34 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               fontWeight: 800,
               fontSize: "1.1rem",
               fontFamily: "var(--font-serif)",
-              boxShadow: "0 2px 5px rgba(62,39,35,0.15)"
+              boxShadow: "0 2px 8px rgba(62,39,35,0.15)"
             }}>
               B
             </div>
-            <span>Budín Nutritivo</span>
+            <span style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 700,
+              fontSize: "1.2rem",
+              letterSpacing: "-0.02em"
+            }}>
+              Budín Nutritivo
+            </span>
           </Link>
 
-          <nav style={{ display: "flex", gap: "1.5rem" }}>
+          <nav style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
             <Link href="/evaluar" style={navLinkStyle}>
               Inicio
             </Link>
             <Link href="/producto" style={navLinkStyle}>
-              Sobre el producto
+              Producto
             </Link>
-            <a href="#" style={navLinkStyle}>
-              Foro
-            </a>
           </nav>
         </div>
       </header>
 
-      {/* Contenido principal */}
-      <main style={{ flex: 1, padding: "2rem 1rem" }}>
-        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+      {/* Content */}
+      <main style={{ flex: 1, padding: "0 1.25rem 3rem" }}>
+        <div style={{ maxWidth: "580px", margin: "0 auto" }}>
           {children}
         </div>
       </main>
@@ -74,22 +77,41 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer style={{
         background: "var(--coco-dark)",
         color: "var(--coco-cream)",
-        padding: "2rem 1rem",
+        padding: "2.5rem 1.25rem",
         textAlign: "center",
-        fontSize: "0.875rem"
       }}>
-        <p>Gracias por ayudarnos a mejorar nuestro budín saludable.</p>
-        <p style={{ marginTop: "0.5rem", opacity: 0.7 }}>&copy; {new Date().getFullYear()} Grupo de Nutricionistas</p>
+        <p style={{ 
+          fontFamily: "var(--font-serif)",
+          fontSize: "1.05rem", 
+          fontWeight: 600,
+          marginBottom: "0.5rem" 
+        }}>
+          Budín Nutritivo
+        </p>
+        <p style={{ fontSize: "0.85rem", opacity: 0.6 }}>
+          Gracias por ayudarnos a mejorar nuestro budín saludable.
+        </p>
+        <div style={{ 
+          width: "32px", 
+          height: "2px", 
+          background: "var(--coco-caramel)", 
+          margin: "1rem auto", 
+          borderRadius: "1px",
+          opacity: 0.5
+        }} />
+        <p style={{ fontSize: "0.8rem", opacity: 0.4 }}>
+          &copy; {new Date().getFullYear()} Grupo de Nutricionistas — ISI
+        </p>
       </footer>
     </div>
   );
 }
 
-const navLinkStyle = {
+const navLinkStyle: React.CSSProperties = {
   textDecoration: "none",
   color: "var(--coco-dark)",
-  opacity: 0.75,
   fontWeight: 500,
-  fontSize: "0.95rem",
-  transition: "opacity 0.2s"
+  fontSize: "0.9rem",
+  opacity: 0.7,
+  transition: "opacity 0.2s ease",
 };

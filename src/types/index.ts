@@ -69,3 +69,61 @@ export const ESCALA_HEDONICA: Record<number, string> = {
   4: "Me gusta",
   5: "Me gusta mucho",
 };
+
+/** Promedio por categoría (para gráfico de araña) */
+export interface CategoryAverage {
+  category: string;
+  label: string;
+  promedio: number;
+  totalResponses: number;
+}
+
+/** Promedio por pregunta individual */
+export interface QuestionAverage {
+  question_id: number;
+  text: string;
+  category: string | null;
+  promedio: number;
+  totalResponses: number;
+}
+
+/** Punto en la línea temporal */
+export interface TimelinePoint {
+  date: string;
+  count: number;
+  promedio: number;
+}
+
+/** Comentario con info del evaluador */
+export interface RecentComment {
+  id: string;
+  content: string;
+  is_visible: boolean;
+  created_at: string;
+  respondent_name: string;
+  respondent_email: string;
+}
+
+/** Evaluación resumida */
+export interface RecentEvaluation {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  promedio: number;
+  totalResponses: number;
+}
+
+/** Datos completos del dashboard */
+export interface DashboardData {
+  totalEvaluaciones: number;
+  promedioGeneral: number;
+  scoreMasAlto: QuestionAverage | null;
+  scoreMasBajo: QuestionAverage | null;
+  promediosPorCategoria: CategoryAverage[];
+  promediosPorPregunta: QuestionAverage[];
+  distribucion: Record<number, number>;
+  timeline: TimelinePoint[];
+  comentariosRecientes: RecentComment[];
+  evaluacionesRecientes: RecentEvaluation[];
+}

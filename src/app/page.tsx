@@ -9,7 +9,7 @@ export default async function Home() {
   if (user) {
     const { data: userRole } = await supabase
       .from("user_roles").select("role").eq("user_id", user.id).single();
-    if (userRole?.role === "admin") redirect("/admin");
+    if (userRole?.role === "admin" || userRole?.role === "nutri") redirect("/dashboard");
   }
 
   // Si no está logueado (evaluador anónimo), ir al formulario de evaluación

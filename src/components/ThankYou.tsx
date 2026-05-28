@@ -1,56 +1,71 @@
 "use client"
 
 import React from "react";
-import { Card, CardContent } from "./ui/Card";
 import { Button } from "./ui/Button";
 
 export function ThankYou({ onReset }: { onReset?: () => void }) {
   return (
-    <div className="animate-fade-in-up" style={{ 
+    <div className="animate-scale-in" style={{ 
       display: "flex", 
       flexDirection: "column", 
       alignItems: "center", 
       justifyContent: "center",
-      minHeight: "50vh",
-      textAlign: "center"
+      minHeight: "55vh",
+      textAlign: "center",
+      padding: "2rem 1rem"
     }}>
-      <div style={{ 
-        width: "80px",
-        height: "80px",
+      {/* Animated check circle */}
+      <div className="thank-you-check" style={{ 
+        width: "88px",
+        height: "88px",
         borderRadius: "50%",
-        background: "var(--coco-light)",
+        background: "linear-gradient(135deg, var(--coco-light), var(--coco-beige))",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: "1.5rem",
-        color: "var(--coco-brown)",
-        boxShadow: "inset 0 2px 4px rgba(62, 39, 35, 0.05)"
+        marginBottom: "2rem",
+        color: "var(--coco-dark)"
       }}>
-        <svg style={{ width: "36px", height: "36px" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+        <svg style={{ width: "40px", height: "40px" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
       
-      <h2 style={{ fontSize: "2rem", marginBottom: "1rem", color: "var(--coco-dark)" }}>
-        ¡Muchas gracias por tu colaboración!
+      <h2 style={{ 
+        fontFamily: "var(--font-serif)",
+        fontSize: "2.2rem", 
+        fontWeight: 800,
+        marginBottom: "0.75rem", 
+        color: "var(--coco-dark)" 
+      }}>
+        ¡Gracias por participar!
       </h2>
       
-      <p style={{ color: "var(--coco-brown)", fontSize: "1.1rem", maxWidth: "400px", marginBottom: "2rem" }}>
-        Tus respuestas nos ayudan a mejorar nuestro budín y crear un producto más delicioso y saludable.
+      <p style={{ 
+        color: "var(--coco-brown)", 
+        fontSize: "1.1rem", 
+        maxWidth: "380px", 
+        marginBottom: "2.5rem",
+        lineHeight: "1.7"
+      }}>
+        Tu evaluación nos ayuda a crear un budín más delicioso y saludable para todos.
       </p>
+
+      {/* Decorative divider */}
+      <div style={{
+        width: "48px",
+        height: "3px",
+        background: "var(--coco-caramel)",
+        borderRadius: "2px",
+        marginBottom: "2.5rem",
+        opacity: 0.6
+      }} />
       
       {onReset && (
-        <Button onClick={onReset} variant="outline" style={{ maxWidth: "200px" }}>
+        <Button onClick={onReset} variant="outline" style={{ maxWidth: "220px" }}>
           Hacer otra evaluación
         </Button>
       )}
-
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
-      `}} />
     </div>
   );
 }

@@ -38,21 +38,22 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Solo proteger rutas de admin y login
+  // Proteger rutas de admin, dashboard y login
   const isAdminRoute = pathname.startsWith("/admin");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
   const isLoginRoute = pathname === "/login";
 
-  // Si intenta acceder a /admin sin estar logueado → redirigir a /login
-  if (isAdminRoute && !user) {
+  // Si intenta acceder a /admin o /dashboard sin estar logueado → redirigir a /login
+  if ((isAdminRoute || isDashboardRoute) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Si ya está logueado e intenta ir a /login → redirigir a /admin
+  // Si ya está logueado e intenta ir a /login → redirigir a /dashboard
   if (isLoginRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

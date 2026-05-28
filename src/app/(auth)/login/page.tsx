@@ -22,7 +22,7 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.push("/admin");
+    router.push("/dashboard");
     router.refresh();
   }
 
@@ -30,8 +30,8 @@ export default function LoginPage() {
     <div style={styles.card}>
       <div style={styles.header}>
         <span style={styles.emoji}>🔒</span>
-        <h1 style={styles.title}>Panel Admin</h1>
-        <p style={styles.subtitle}>Acceso restringido a administradores</p>
+        <h1 style={styles.title}>Panel de Resultados</h1>
+        <p style={styles.subtitle}>Acceso restringido a usuarios autorizados</p>
       </div>
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.field}>

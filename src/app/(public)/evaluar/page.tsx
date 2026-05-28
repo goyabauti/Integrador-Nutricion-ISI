@@ -7,9 +7,81 @@ import { RatingSlider } from "@/components/ui/RatingSlider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { ThankYou } from "@/components/ThankYou";
 
-// Tipo basado en la tabla questions del schema
 type Question = { id: number; text: string; order_index: number; category: string | null };
 
+/* ── Category display helpers ── */
+const CATEGORY_LABELS: Record<string, string> = {
+  hedonica: "Escala Hedónica",
+  positivos: "Atributos Positivos",
+  generales: "Atributos Generales",
+  defectos: "Defectos",
+};
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  hedonica: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" /></svg>
+  ),
+  positivos: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>
+  ),
+  generales: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+  ),
+  defectos: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+  ),
+};
+
+/* ── Progress step component ── */
+function ProgressSteps({ currentStep }: { currentStep: number }) {
+  const steps = [
+    { num: 1, label: "Datos" },
+    { num: 2, label: "Evaluar" },
+    { num: 3, label: "Enviar" },
+  ];
+
+  return (
+    <div className="progress-steps">
+      {steps.map((step, i) => (
+        <React.Fragment key={step.num}>
+          <div className="step-item">
+            <div className={`step-circle ${currentStep > step.num ? 'completed' : currentStep === step.num ? 'active' : 'inactive'}`}>
+              {currentStep > step.num ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
+              ) : (
+                step.num
+              )}
+            </div>
+            <span className={`step-label ${currentStep >= step.num ? 'active' : ''}`}>
+              {step.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`step-connector ${currentStep > step.num ? 'completed' : 'inactive'}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+/* ── Loading skeleton ── */
+function LoadingSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: "3rem 0" }}>
+      <div className="skeleton" style={{ height: "28px", width: "140px", margin: "0 auto" }} />
+      <div className="skeleton" style={{ height: "48px", width: "320px", margin: "0 auto" }} />
+      <div className="skeleton" style={{ height: "20px", width: "260px", margin: "0 auto" }} />
+      <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="skeleton" style={{ height: "140px", width: "100%" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Page ── */
 export default function EvaluarPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
@@ -17,7 +89,6 @@ export default function EvaluarPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  // Estado del formulario
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [comment, setComment] = useState("");
@@ -46,7 +117,6 @@ export default function EvaluarPage() {
 
   const handleRatingChange = (questionId: number, value: number) => {
     setScores(prev => ({ ...prev, [questionId]: value }));
-    // Limpiar error de ese campo si lo había
     if (fieldErrors[`q_${questionId}`]) {
       setFieldErrors(prev => {
         const next = { ...prev };
@@ -60,14 +130,9 @@ export default function EvaluarPage() {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = "Requerido";
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email inválido";
-
-    // Validar que todas las questions hayan sido evaluadas
     questions.forEach(q => {
-      if (!scores[q.id]) {
-        newErrors[`q_${q.id}`] = "Por favor, evaluá este atributo";
-      }
+      if (!scores[q.id]) newErrors[`q_${q.id}`] = "Evaluá este atributo";
     });
-
     setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -75,15 +140,12 @@ export default function EvaluarPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     if (!validateForm()) {
-      setError("Por favor, completá todos los campos requeridos y evaluá todos los atributos.");
+      setError("Completá todos los campos y evaluá todos los atributos.");
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-
     setLoadingSubmit(true);
-
     try {
       const payload = {
         name,
@@ -94,36 +156,43 @@ export default function EvaluarPage() {
           score
         }))
       };
-
       const res = await fetch("/api/evaluaciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const json = await res.json();
-
       if (!res.ok || !json.success) {
-        setError(json.error || "Ocurrió un error al enviar tu evaluación. Intentá nuevamente.");
+        setError(json.error || "Error al enviar. Intentá nuevamente.");
         return;
       }
-
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
     } catch {
-      setError("Ocurrió un error al enviar tu evaluación. Intentá nuevamente.");
+      setError("Error al enviar. Intentá nuevamente.");
     } finally {
       setLoadingSubmit(false);
     }
   };
 
+  /* ── Compute current progress step ── */
+  const hasPersonalData = name.trim().length > 0 && /^\S+@\S+\.\S+$/.test(email);
+  const answeredCount = Object.keys(scores).length;
+  const totalQuestions = questions.length;
+  const currentStep = hasPersonalData && answeredCount === totalQuestions ? 3
+    : hasPersonalData ? 2
+      : 1;
+
+  /* ── Group questions by category ── */
+  const groupedQuestions = questions.reduce<Record<string, Question[]>>((acc, q) => {
+    const cat = q.category || "general";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(q);
+    return acc;
+  }, {});
+
   if (loadingQuestions) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "4rem" }}>
-        <p>Cargando encuesta...</p>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (submitted) {
@@ -132,112 +201,144 @@ export default function EvaluarPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <span style={{ 
-          fontSize: "0.85rem", 
-          fontWeight: 600, 
-          letterSpacing: "0.15em", 
-          color: "var(--coco-caramel)", 
-          textTransform: "uppercase",
-          display: "block",
-          marginBottom: "0.5rem"
-        }}>
-          Paso 2
-        </span>
-        <h1 style={{ 
-          fontSize: "3.2rem", 
-          fontFamily: "var(--font-serif)", 
-          fontWeight: 800, 
-          lineHeight: "1.1", 
-          color: "var(--coco-dark)",
-          marginBottom: "0.75rem" 
-        }}>
+      {/* Hero Section */}
+      <div className="hero-section">
+        <div className="hero-badge">Evaluación Sensorial</div>
+        <h1 className="hero-title">
           Evalúa la muestra
         </h1>
-        <p style={{ 
-          color: "var(--coco-brown)", 
-          fontSize: "1.15rem",
-          fontWeight: 400
-        }}>
-          Probá el budín y deslizá cada barra según tu impresión.
+        <p className="hero-subtitle">
+          Probá el budín y deslizá cada barra según tu impresión. Tu opinión nos ayuda a mejorar.
         </p>
       </div>
 
+      {/* Progress Steps */}
+      <ProgressSteps currentStep={currentStep} />
+
       {error && (
-        <div style={{ 
-          background: "#fef2f2", 
-          color: "var(--coco-danger)", 
-          padding: "1rem", 
-          borderRadius: "8px", 
-          marginBottom: "1.5rem",
-          fontWeight: 500,
-          border: "1px solid #fecaca"
-        }}>
+        <div className="alert-error" style={{ marginBottom: "1.5rem" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-        
+
         {/* Datos Personales */}
         <Card>
           <CardHeader>
-            <CardTitle>Tus datos</CardTitle>
+            <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Tus datos
+            </CardTitle>
             <CardDescription>Para saber quién nos ayuda a mejorar</CardDescription>
           </CardHeader>
           <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Input 
-              label="Nombre" 
-              placeholder="Ej: María García" 
-              value={name} 
+            <Input
+              label="Nombre"
+              placeholder="Ej: María García"
+              value={name}
               onChange={e => setName(e.target.value)}
               error={fieldErrors.name}
             />
-            <Input 
-              label="Email" 
-              type="email" 
-              placeholder="tu@email.com" 
-              value={email} 
+            <Input
+              label="Email"
+              type="email"
+              placeholder="tu@email.com"
+              value={email}
               onChange={e => setEmail(e.target.value)}
               error={fieldErrors.email}
             />
           </CardContent>
         </Card>
 
-        {/* Encuesta (Sliders) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          
-          
-          {questions.map(q => (
-            <RatingSlider
-              key={q.id}
-              label={q.text}
-              value={scores[q.id] || 0}
-              onChange={(val) => handleRatingChange(q.id, val)}
-              error={fieldErrors[`q_${q.id}`]}
-            />
-          ))}
-        </div>
+        {/* Questions grouped by category */}
+        {Object.entries(groupedQuestions).map(([category, qs]) => (
+          <div key={category}>
+            {/* Section header with lines */}
+            <div className="section-header">
+              <div className="section-line" />
+              <div className="section-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                {CATEGORY_ICONS[category]}
+                {CATEGORY_LABELS[category] || category}
+              </div>
+              <div className="section-line" />
+            </div>
+
+            {/* Sliders for this category */}
+            <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+              {qs.map(q => (
+                <RatingSlider
+                  key={q.id}
+                  label={q.text}
+                  value={scores[q.id] || 0}
+                  onChange={(val) => handleRatingChange(q.id, val)}
+                  error={fieldErrors[`q_${q.id}`]}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
 
         {/* Comentarios */}
         <Card>
           <CardHeader>
-            <CardTitle>Comentarios adicionales</CardTitle>
-            <CardDescription>Opcional</CardDescription>
+            <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+              Comentarios
+            </CardTitle>
+            <CardDescription>Opcional — contanos qué te pareció</CardDescription>
           </CardHeader>
           <CardContent>
-            <Input 
-              label="Notas optativas" 
-              multiline 
-              placeholder="¿Qué te pareció? ¿Algo que destacarías o mejorarías?" 
-              value={comment} 
+            <Input
+              label="Notas"
+              multiline
+              placeholder="¿Qué destacarías? ¿Qué mejorarías?"
+              value={comment}
               onChange={e => setComment(e.target.value)}
             />
           </CardContent>
         </Card>
 
+        {/* Progress indicator */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 0.25rem",
+          fontSize: "0.85rem",
+          color: "var(--coco-brown)"
+        }}>
+          <span>{answeredCount} de {totalQuestions} atributos evaluados</span>
+          <div style={{
+            width: "120px",
+            height: "4px",
+            background: "var(--coco-beige)",
+            borderRadius: "2px",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              height: "100%",
+              width: totalQuestions > 0 ? `${(answeredCount / totalQuestions) * 100}%` : "0%",
+              background: answeredCount === totalQuestions ? "var(--coco-caramel)" : "var(--coco-dark)",
+              borderRadius: "2px",
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+        </div>
+
         {/* Submit */}
         <Button size="lg" type="submit" loading={loadingSubmit}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
           Enviar evaluación
         </Button>
       </form>
