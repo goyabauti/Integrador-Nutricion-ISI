@@ -21,7 +21,10 @@ interface RadarChartProps {
 
 export function RadarChart({ data }: RadarChartProps) {
   const chartData = {
-    labels: data.map((d) => d.label),
+    labels: data.map((d) => {
+      const label = d.label;
+      return label.length > 18 ? label.substring(0, 18) + "..." : label;
+    }),
     datasets: [
       {
         label: "Promedio",
@@ -59,7 +62,7 @@ export function RadarChart({ data }: RadarChartProps) {
           color: "rgba(232, 216, 200, 0.6)",
         },
         pointLabels: {
-          font: { size: 12, weight: 600 as const, family: "'Inter', sans-serif" },
+          font: { size: 11, weight: 600 as const, family: "'Inter', sans-serif" },
           color: "#3E2723",
         },
       },
@@ -92,7 +95,7 @@ export function RadarChart({ data }: RadarChartProps) {
         </h3>
         <p className="chart-subtitle">Gráfico de araña — escala 1 a 5</p>
       </div>
-      <div style={{ height: "320px", padding: "1rem 0" }}>
+      <div className="chart-canvas-wrapper" style={{ padding: "1rem 0" }}>
         <Radar data={chartData} options={options} />
       </div>
     </div>

@@ -72,6 +72,13 @@ export function BarChart({ data }: BarChartProps) {
         ticks: {
           font: { size: 11, family: "'Inter', sans-serif" },
           color: "#3E2723",
+          callback: function(value: any, index: number) {
+            const label = topItems[index]?.text;
+            if (label && label.length > 25) {
+              return label.substring(0, 25) + "...";
+            }
+            return label || "";
+          },
         },
         grid: { display: false },
       },

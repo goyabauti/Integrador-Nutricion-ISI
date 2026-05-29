@@ -62,7 +62,7 @@ const styles: Record<string, React.CSSProperties> = {
   form: { display: "flex", flexDirection: "column", gap: "1.25rem" },
   field: { display: "flex", flexDirection: "column", gap: "0.4rem" },
   label: { fontWeight: 600, fontSize: "0.875rem" },
-  input: { padding: "0.75rem 1rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontSize: "1rem", outline: "none" },
+  input: { padding: "0.75rem 1rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontSize: "1rem", outline: "none", width: "100%", boxSizing: "border-box" as const },
   error: { color: "var(--danger)", fontSize: "0.875rem", background: "#fef2f2", padding: "0.75rem", borderRadius: "8px" },
-  button: { background: "var(--primary)", color: "#fff", border: "none", borderRadius: "8px", padding: "0.875rem", fontSize: "1rem", fontWeight: 600, marginTop: "0.5rem", cursor: "pointer" },
+  button: { background: "var(--primary)", color: "#fff", border: "none", borderRadius: "8px", padding: "0.875rem", fontSize: "1rem", fontWeight: 600, marginTop: "0.5rem", cursor: "pointer", width: "100%" },
 };
