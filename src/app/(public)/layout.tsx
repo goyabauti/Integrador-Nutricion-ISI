@@ -16,6 +16,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/evaluar" className="public-nav-link">Inicio</Link>
             <Link href="/producto" className="public-nav-link">Producto</Link>
             <Link href="/opiniones" className="public-nav-link">Opiniones</Link>
+            <Link href="/login" className="public-nav-link public-nav-admin">Acceso Admin</Link>
           </nav>
         </div>
       </header>

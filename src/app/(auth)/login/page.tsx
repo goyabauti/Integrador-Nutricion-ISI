@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/server/supabase/client";
 
 export default function LoginPage() {
@@ -49,6 +50,11 @@ export default function LoginPage() {
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
+      <div className="login-back-container">
+        <Link href="/evaluar" className="login-back-link">
+          <span>←</span> Volver al Inicio
+        </Link>
+      </div>
     </div>
   );
 }
