@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "npx playwright test tests/e2e",
+    "test:load": "npx playwright test tests/load",
+    "test:load:api": "npx playwright test tests/load/load-test-api.spec.ts",
+    "test:load:browser": "npx playwright test tests/load/load-test-browser.spec.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -18,6 +22,7 @@
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
