@@ -74,7 +74,7 @@ export function DoughnutChart({ distribucion }: DoughnutChartProps) {
           label: (ctx: { label: string; raw: unknown }) => {
             const val = ctx.raw as number;
             const pct = total > 0 ? Math.round((val / total) * 100) : 0;
-            return ` ${val} respuestas (${pct}%)`;
+            return ` ${val} evaluadores (${pct}%)`;
           },
         },
       },
@@ -91,7 +91,7 @@ export function DoughnutChart({ distribucion }: DoughnutChartProps) {
           </svg>
           Distribución de Scores
         </h3>
-        <p className="chart-subtitle">{total} respuestas totales</p>
+        <p className="chart-subtitle">{total} evaluadores</p>
       </div>
       <div style={{ height: "320px", padding: "0.5rem 0" }}>
         <Doughnut data={chartData} options={options} />

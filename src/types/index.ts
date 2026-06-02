@@ -94,24 +94,31 @@ export interface TimelinePoint {
   promedio: number;
 }
 
-/** Comentario con info del evaluador */
+/** Comentario con info del evaluador (anonimizado) */
 export interface RecentComment {
   id: string;
   content: string;
   is_visible: boolean;
   created_at: string;
-  respondent_name: string;
-  respondent_email: string;
+  respondent_label: string;
 }
 
-/** Evaluación resumida */
+/** Detalle de una respuesta individual dentro de una evaluación reciente */
+export interface ResponseDetail {
+  question_id: number;
+  text: string;
+  category: string | null;
+  score: number;
+}
+
+/** Evaluación resumida con detalle por pregunta (datos anonimizados) */
 export interface RecentEvaluation {
   id: string;
-  name: string;
-  email: string;
+  label: string;
   created_at: string;
   promedio: number;
   totalResponses: number;
+  responses: ResponseDetail[];
 }
 
 /** Datos completos del dashboard */

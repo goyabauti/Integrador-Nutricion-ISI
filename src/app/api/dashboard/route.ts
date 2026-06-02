@@ -32,22 +32,23 @@ export async function GET() {
 
     const supabase = await createServerSupabaseClient();
 
-    // 1. Total de respondents
+    // 1. Total de respondents que realmente respondieron (al menos 1 pregunta)
     console.log("[API/Dashboard] Querying respondents count...");
     const { count: totalEvaluaciones, error: countError } = await supabase
       .from("respondents")
-      .select("*", { count: "exact", head: true });
+      .select("id, responses!inner(respondent_id)", { count: "exact", head: true });
 
     if (countError) {
       console.error("[API/Dashboard] Error querying respondents count:", countError);
       return serverErrorResponse(countError.message);
     }
-    console.log("[API/Dashboard] Respondents count:", totalEvaluaciones);
+    console.log("[API/Dashboard] Respondents with responses count:", totalEvaluaciones);
 
     // 2. Todas las responses con info de la question
     const { data: allResponses, error: responsesError } = await supabase
       .from("responses")
-      .select("score, question_id, created_at, respondent_id, questions(text, category)");
+      .select("score, question_id, created_at, respondent_id, questions(text, category)")
+      .limit(10000); // Supabase default cap is 1000 — necesitamos todas las filas
 
     if (responsesError) {
       return serverErrorResponse(responsesError.message);
@@ -61,7 +62,6 @@ export async function GET() {
       count: number;
     }>();
 
-    const distribucion: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     let totalScore = 0;
     let totalCount = 0;
 
@@ -83,10 +83,27 @@ export async function GET() {
       entry.count += 1;
       totalScore += r.score;
       totalCount += 1;
+    }
 
-      if (r.score >= 1 && r.score <= 5) {
-        distribucion[r.score] = (distribucion[r.score] || 0) + 1;
-      }
+    // 3b. Distribución: query directo sobre todos los respondents con sus scores
+    // Así sum(distribucion) == totalEvaluaciones (no depende de la tabla responses)
+    const { data: allRespondentsWithScores, error: distError } = await supabase
+      .from("respondents")
+      .select("id, responses(score)")
+      .limit(10000);
+
+    if (distError) {
+      return serverErrorResponse(distError.message);
+    }
+
+    const distribucion: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const respondent of allRespondentsWithScores || []) {
+      const scores = respondent.responses as unknown as { score: number }[] || [];
+      // Si no respondió ninguna pregunta, se omite (no distorsiona el promedio)
+      if (scores.length === 0) continue;
+      const avg = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+      const bucket = Math.min(5, Math.max(1, Math.round(avg))) as 1 | 2 | 3 | 4 | 5;
+      distribucion[bucket] = (distribucion[bucket] || 0) + 1;
     }
 
     // Promedios por pregunta
@@ -148,44 +165,56 @@ export async function GET() {
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // 5. Comentarios recientes
+    // 5. Comentarios recientes (anonimizados — no se exponen datos personales)
     const { data: commentsData } = await supabase
       .from("comments")
-      .select("id, content, is_visible, created_at, respondent_id, respondents(name, email)")
+      .select("id, content, is_visible, created_at, respondent_id")
       .order("created_at", { ascending: false })
       .limit(10);
 
-    const comentariosRecientes: RecentComment[] = (commentsData || []).map((c) => {
-      const resp = c.respondents as unknown as { name: string; email: string } | null;
-      return {
-        id: c.id,
-        content: c.content,
-        is_visible: c.is_visible,
-        created_at: c.created_at,
-        respondent_name: resp?.name || "Anónimo",
-        respondent_email: resp?.email || "",
-      };
-    });
+    const comentariosRecientes: RecentComment[] = (commentsData || []).map((c, i) => ({
+      id: c.id,
+      content: c.content,
+      is_visible: c.is_visible,
+      created_at: c.created_at,
+      respondent_label: `Evaluador ${c.respondent_id.slice(0, 6).toUpperCase()}`,
+    }));
 
-    // 6. Evaluaciones recientes
+    // 6. Evaluaciones recientes (anonimizadas — sin nombre ni email)
     const { data: respondentsData } = await supabase
       .from("respondents")
-      .select("id, name, email, created_at, responses(score)")
+      .select("id, created_at, responses(score, question_id, questions(text, category, order_index))")
       .order("created_at", { ascending: false })
       .limit(10);
 
     const evaluacionesRecientes: RecentEvaluation[] = (respondentsData || []).map((r) => {
-      const responses = r.responses as unknown as { score: number }[] || [];
-      const avg = responses.length > 0
-        ? Math.round((responses.reduce((sum, resp) => sum + resp.score, 0) / responses.length) * 100) / 100
+      const rawResponses = r.responses as unknown as {
+        score: number;
+        question_id: number;
+        questions: { text: string; category: string | null; order_index: number } | null;
+      }[] || [];
+
+      const avg = rawResponses.length > 0
+        ? Math.round((rawResponses.reduce((sum, resp) => sum + resp.score, 0) / rawResponses.length) * 100) / 100
         : 0;
+
+      const responses = rawResponses
+        .sort((a, b) => (a.questions?.order_index ?? 0) - (b.questions?.order_index ?? 0))
+        .map((resp) => ({
+          question_id: resp.question_id,
+          text: resp.questions?.text || `Pregunta ${resp.question_id}`,
+          category: resp.questions?.category || null,
+          score: resp.score,
+        }));
+
       return {
         id: r.id,
-        name: r.name,
-        email: r.email,
+        // Label anónimo derivado del UUID — consistente entre cargas, no identificable
+        label: `Evaluador ${r.id.slice(0, 6).toUpperCase()}`,
         created_at: r.created_at,
         promedio: avg,
-        totalResponses: responses.length,
+        totalResponses: rawResponses.length,
+        responses,
       };
     });
 

@@ -31,6 +31,105 @@ function ScoreIndicator({ score }: { score: number }) {
   );
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  hedonica: "Hedónica",
+  positivos: "Positivos",
+  generales: "Generales",
+  defectos: "Defectos",
+};
+
+function ScoreBadge({ score }: { score: number }) {
+  let bg = "#E5737320";
+  let color = "#E57373";
+  if (score >= 4) { bg = "#81C78420"; color = "#81C784"; }
+  else if (score >= 3) { bg = "#FFD54F20"; color = "#b8960c"; }
+  else if (score >= 2) { bg = "#FFB74D20"; color = "#FFB74D"; }
+  return (
+    <span style={{
+      background: bg, color, fontWeight: 700, fontSize: "0.78rem",
+      borderRadius: "6px", padding: "2px 8px", minWidth: "2rem", textAlign: "center",
+    }}>{score}</span>
+  );
+}
+
+function EvaluationItem({ ev }: { ev: import("@/types").RecentEvaluation }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="evaluation-item" style={{ flexDirection: "column", alignItems: "stretch", gap: 0, padding: 0 }}>
+      {/* Fila principal — clickeable */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          width: "100%", background: "none", border: "none", cursor: "pointer",
+          padding: "0.75rem 1rem", textAlign: "left", gap: "0.5rem",
+        }}
+        aria-expanded={open}
+      >
+        <div className="evaluation-info" style={{ flex: 1, minWidth: 0 }}>
+          <span className="evaluation-name">{ev.label}</span>
+        </div>
+        <div className="evaluation-meta">
+          <ScoreIndicator score={ev.promedio} />
+          <span className="evaluation-date">{formatDate(ev.created_at)}</span>
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="var(--coco-caramel)" strokeWidth="2.5"
+            style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Panel expandible */}
+      {open && ev.responses.length > 0 && (
+        <div style={{
+          borderTop: "1px solid var(--coco-cream-dark, #e8ddd4)",
+          padding: "0.75rem 1rem 1rem",
+          display: "flex", flexDirection: "column", gap: "0.5rem",
+          background: "rgba(0,0,0,0.015)",
+        }}>
+          {ev.responses.map((resp) => {
+            const pct = (resp.score / 5) * 100;
+            let barColor = "#E57373";
+            if (resp.score >= 4) barColor = "#81C784";
+            else if (resp.score >= 3) barColor = "#FFD54F";
+            else if (resp.score >= 2) barColor = "#FFB74D";
+            const catLabel = resp.category ? CATEGORY_LABELS[resp.category] ?? resp.category : null;
+            return (
+              <div key={resp.question_id} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "3px" }}>
+                    {catLabel && (
+                      <span style={{
+                        fontSize: "0.65rem", fontWeight: 600, background: "var(--coco-caramel, #8B5E3C)20",
+                        color: "var(--coco-caramel, #8B5E3C)", borderRadius: "4px", padding: "1px 5px",
+                        whiteSpace: "nowrap",
+                      }}>{catLabel}</span>
+                    )}
+                    <span style={{ fontSize: "0.78rem", color: "#5a4a3a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {resp.text}
+                    </span>
+                  </div>
+                  <div style={{ height: "5px", borderRadius: "3px", background: "#e8ddd4", overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: "3px", transition: "width 0.4s ease" }} />
+                  </div>
+                </div>
+                <ScoreBadge score={resp.score} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {open && ev.responses.length === 0 && (
+        <div style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", color: "#999" }}>Sin respuestas registradas</div>
+      )}
+    </div>
+  );
+}
+
 function LoadingSkeleton() {
   return (
     <div className="dashboard-loading">
@@ -219,7 +318,7 @@ export default function DashboardPage() {
               data.comentariosRecientes.map((c) => (
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
-                    <span className="comment-author">{c.respondent_name}</span>
+                    <span className="comment-author">{c.respondent_label}</span>
                     <span className="comment-date">{formatDate(c.created_at)}</span>
                   </div>
                   <p className="comment-content">{c.content}</p>
@@ -241,21 +340,12 @@ export default function DashboardPage() {
             </h3>
             <p className="chart-subtitle">{data.evaluacionesRecientes.length} más recientes</p>
           </div>
-          <div className="evaluations-list">
+          <div className="evaluations-list" style={{ padding: 0 }}>
             {data.evaluacionesRecientes.length === 0 ? (
               <p className="comments-empty">Sin evaluaciones aún</p>
             ) : (
               data.evaluacionesRecientes.map((ev) => (
-                <div key={ev.id} className="evaluation-item">
-                  <div className="evaluation-info">
-                    <span className="evaluation-name">{ev.name}</span>
-                    <span className="evaluation-email">{ev.email}</span>
-                  </div>
-                  <div className="evaluation-meta">
-                    <ScoreIndicator score={ev.promedio} />
-                    <span className="evaluation-date">{formatDate(ev.created_at)}</span>
-                  </div>
-                </div>
+                <EvaluationItem key={ev.id} ev={ev} />
               ))
             )}
           </div>
