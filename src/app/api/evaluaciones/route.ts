@@ -59,9 +59,23 @@ export async function POST(request: Request) {
     // Usar cliente anónimo (sin cookies/sesión) para operaciones públicas
     const supabase = createAnonSupabaseClient();
 
+    // 1. Validar que hayan respondido TODAS las preguntas activas
+    const { count: activeQuestionsCount, error: countError } = await supabase
+      .from("questions")
+      .select("*", { count: "exact", head: true })
+      .eq("active", true);
+
+    if (countError) {
+      return serverErrorResponse(countError.message);
+    }
+
+    if (responses.length !== activeQuestionsCount) {
+      return errorResponse(`Faltan respuestas. Debes responder las ${activeQuestionsCount} preguntas obligatorias.`);
+    }
+
     const respondentId = crypto.randomUUID();
 
-    // 1. Insertar respondent
+    // 2. Insertar respondent
     const { error: respondentError } = await supabase
       .from("respondents")
       .insert({ id: respondentId, name, email });
@@ -70,7 +84,7 @@ export async function POST(request: Request) {
       return serverErrorResponse(respondentError.message);
     }
 
-    // 2. Insertar responses
+    // 3. Insertar responses
     const responsesPayload = responses.map((r) => ({
       respondent_id: respondentId,
       question_id: r.question_id,
@@ -85,7 +99,7 @@ export async function POST(request: Request) {
       return serverErrorResponse(responsesError.message);
     }
 
-    // 3. Insertar comment (si existe)
+    // 4. Insertar comment (si existe)
     if (comment) {
       const { error: commentError } = await supabase
         .from("comments")
