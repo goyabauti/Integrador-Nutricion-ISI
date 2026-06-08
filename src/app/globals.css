@@ -646,6 +646,14 @@ h6,
 }
 
 /* =============================================
+   PRODUCTO PAGE
+   ============================================= */
+.ingredient-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* =============================================
    RESPONSIVE
    ============================================= */
 @media (max-width: 640px) {
@@ -663,6 +671,11 @@ h6,
 
   .step-connector {
     width: 32px;
+  }
+
+  /* Producto: benefits en 1 columna en móvil */
+  [style*="gridTemplateColumns: \"1fr 1fr\""] {
+    grid-template-columns: 1fr !important;
   }
 }
 
