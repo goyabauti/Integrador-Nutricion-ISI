@@ -50,17 +50,7 @@ test.describe("Carga E2E — 10 browsers simultáneos", () => {
         // 2. Wait for sliders to load
         await page.waitForSelector('input[type="range"]', { timeout: 30000 });
 
-        // 3. Fill personal data
-        await page.fill(
-          'input[placeholder="Ej: María García"]',
-          `Browser User ${userIndex}`
-        );
-        await page.fill(
-          'input[placeholder="tu@email.com"]',
-          `browser-${runId}-${userIndex}@test.com`
-        );
-
-        // 4. Move all sliders — fill("1") first to force change from default 3
+        // 3. Move all sliders — fill("1") first to force change from default 3
         const sliders = page.locator('input[type="range"]');
         const count = await sliders.count();
         for (let s = 0; s < count; s++) {
