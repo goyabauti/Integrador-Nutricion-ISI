@@ -20,7 +20,7 @@ export interface Question {
 export interface Respondent {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   created_at: string;
 }
 
@@ -50,8 +50,8 @@ export interface RespondentWithDetails extends Respondent {
 
 /** Datos que envía el evaluador al hacer submit del formulario */
 export interface SurveySubmission {
-  name: string;
-  email: string;
+  name?: string;
+  email?: string | null;
   comment?: string;
   responses: ResponseInput[];
 }
