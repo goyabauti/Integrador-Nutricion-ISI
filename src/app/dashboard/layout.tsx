@@ -4,7 +4,7 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { NoRoleAccess } from "@/components/dashboard/NoRoleAccess";
 
 export const metadata = {
-  title: "Dashboard — Budín Nutritivo",
+  title: "Dashboard — Nutridín",
   description: "Panel de métricas y resultados de evaluaciones sensoriales",
 };
 

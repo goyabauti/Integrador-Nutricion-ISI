@@ -1,5 +1,6 @@
 import { createAnonSupabaseClient } from "@/server/supabase/anon";
 import { successResponse, serverErrorResponse } from "@/server/api-response";
+import { getFriendlyAnonymousName } from "@/server/utils";
 
 /**
  * GET /api/comentarios
@@ -27,7 +28,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("comments")
-      .select("id, content, created_at, respondent:respondents(name)")
+      .select("id, content, created_at, respondent_id, respondent:respondents(name)")
       .eq("is_visible", true)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -38,13 +39,17 @@ export async function GET() {
     }
 
     // Formatear para el frontend
-    const comments = (data || []).map((c: Record<string, unknown>) => {
+    const comments = (data || []).map((c: Record<string, any>) => {
       const respondent = c.respondent as { name: string } | null;
+      const rawName = respondent?.name?.trim();
+      const displayName = rawName && rawName.toLowerCase() !== "anónimo" && rawName.toLowerCase() !== "anonimo"
+        ? rawName
+        : getFriendlyAnonymousName(c.respondent_id);
       return {
         id: c.id,
         content: c.content,
         created_at: c.created_at,
-        name: respondent?.name || "Anónimo",
+        name: displayName,
       };
     });
 

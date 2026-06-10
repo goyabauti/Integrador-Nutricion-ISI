@@ -214,7 +214,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="dashboard-page-title">Dashboard</h1>
           <p className="dashboard-page-subtitle">
-            Resumen de evaluaciones sensoriales del budín nutritivo
+            Resumen de evaluaciones sensoriales de Nutridín
           </p>
         </div>
         <div className="dashboard-page-meta">

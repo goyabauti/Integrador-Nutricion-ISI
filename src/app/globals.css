@@ -648,6 +648,20 @@ h6,
 /* =============================================
    PRODUCTO PAGE
    ============================================= */
+.ingredients-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .ingredient-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
@@ -674,7 +688,7 @@ h6,
   }
 
   /* Producto: benefits en 1 columna en móvil */
-  [style*="gridTemplateColumns: \"1fr 1fr\""] {
+  .benefits-grid {
     grid-template-columns: 1fr !important;
   }
 }
@@ -1751,7 +1765,7 @@ h6,
   }
 
   .public-logo-text {
-    font-size: 1rem;
+    display: none;
   }
 
   .public-nav {

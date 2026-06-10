@@ -142,7 +142,7 @@ export default function OpinionesPage() {
           Lo que dicen<br />nuestros catadores
         </h1>
         <p className="hero-subtitle">
-          Cada opinión nos inspira a mejorar. Leé lo que dicen quienes ya probaron nuestro budín nutritivo.
+          Cada opinión nos inspira a mejorar. Leé lo que dicen quienes ya probaron Nutridín.
         </p>
       </div>
 

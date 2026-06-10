@@ -23,3 +23,21 @@ export async function fetchJson<T>(
     return [null, err instanceof Error ? err : new Error(String(err))];
   }
 }
+
+/**
+ * Genera un nombre anónimo determinista (ej: Anónimo 42) a partir de un UUID.
+ */
+export function getFriendlyAnonymousName(uuid: string): string {
+  if (!uuid) return "Anónimo";
+
+  // Hash simple y determinista del UUID
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = uuid.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  const num = (hash % 1000) + 1;
+  return `Anónimo ${num}`;
+}
+
