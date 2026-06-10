@@ -30,8 +30,7 @@ export async function GET() {
       .from("comments")
       .select("id, content, created_at, respondent_id, respondent:respondents(name)")
       .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-      .limit(50);
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching public comments:", error.message);
