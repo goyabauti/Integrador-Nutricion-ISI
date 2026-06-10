@@ -41,9 +41,9 @@ export function DashboardShell({ children, userEmail, userRole }: DashboardShell
       <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">B</div>
+            <div className="sidebar-logo-icon">N</div>
             <div className="sidebar-logo-text">
-              <span className="sidebar-brand">Budín Nutritivo</span>
+              <span className="sidebar-brand">Nutridín</span>
               <span className="sidebar-tagline">Panel de Resultados</span>
             </div>
           </div>
@@ -112,7 +112,7 @@ export function DashboardShell({ children, userEmail, userRole }: DashboardShell
             </svg>
           </button>
           <div className="topbar-title">
-            <span className="sidebar-brand" style={{ fontSize: "1.05rem" }}>Budín Nutritivo</span>
+            <span className="sidebar-brand" style={{ fontSize: "1.05rem" }}>Nutridín</span>
           </div>
           <div
             className="topbar-role-badge"

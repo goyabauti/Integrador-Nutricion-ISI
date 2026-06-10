@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/server/supabase/server";
 import { successResponse, errorResponse, serverErrorResponse } from "@/server/api-response";
 import { requireAuth } from "@/server/auth";
+import { getFriendlyAnonymousName } from "@/server/utils";
 import type {
   CategoryAverage,
   QuestionAverage,
@@ -177,7 +178,7 @@ export async function GET() {
       content: c.content,
       is_visible: c.is_visible,
       created_at: c.created_at,
-      respondent_label: `Evaluador ${c.respondent_id.slice(0, 6).toUpperCase()}`,
+      respondent_label: getFriendlyAnonymousName(c.respondent_id),
     }));
 
     // 6. Evaluaciones recientes (anonimizadas — sin nombre ni email)
@@ -209,8 +210,8 @@ export async function GET() {
 
       return {
         id: r.id,
-        // Label anónimo derivado del UUID — consistente entre cargas, no identificable
-        label: `Evaluador ${r.id.slice(0, 6).toUpperCase()}`,
+        // Label anónimo determinista y amigable
+        label: getFriendlyAnonymousName(r.id),
         created_at: r.created_at,
         promedio: avg,
         totalResponses: rawResponses.length,

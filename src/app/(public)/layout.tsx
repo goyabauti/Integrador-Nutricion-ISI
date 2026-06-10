@@ -8,8 +8,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <header className="public-header">
         <div className="public-header-inner">
           <Link href="/evaluar" className="public-logo-link">
-            <div className="public-logo-icon">B</div>
-            <span className="public-logo-text">Budín Nutritivo</span>
+            <div className="public-logo-icon">N</div>
+            <span className="public-logo-text">Nutridín</span>
           </Link>
 
           <nav className="public-nav">
@@ -30,7 +30,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       {/* Footer */}
       <footer className="public-footer">
-        <p className="public-footer-brand">Budín Nutritivo</p>
+        <p className="public-footer-brand">Nutridín</p>
         <p className="public-footer-tagline">
           Gracias por ayudarnos a mejorar nuestro budín saludable.
         </p>

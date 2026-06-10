@@ -125,7 +125,7 @@ export default function ProductoPage() {
           <span className="section-title">Sus ingredientes</span>
           <div className="section-line" />
         </div>
-        <div style={ingredientsGridStyle}>
+        <div className="ingredients-grid">
           {ingredients.map((ing) => (
             <div key={ing.name} style={ingredientCardStyle} className="ingredient-card">
               <div style={{ ...ingredientIconStyle, background: `${ing.color}20`, border: `1.5px solid ${ing.color}40` }}>
@@ -147,7 +147,7 @@ export default function ProductoPage() {
           <span className="section-title">¿Por qué es bueno?</span>
           <div className="section-line" />
         </div>
-        <div style={benefitsGridStyle}>
+        <div className="benefits-grid">
           {benefits.map((b) => (
             <div key={b.title} style={benefitCardStyle}>
               <div style={benefitIconStyle}>{b.icon}</div>
@@ -211,12 +211,6 @@ const tagStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-const ingredientsGridStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.75rem",
-  marginTop: "1rem",
-};
 
 const ingredientCardStyle: React.CSSProperties = {
   display: "flex",
@@ -253,12 +247,6 @@ const ingredientDescStyle: React.CSSProperties = {
   lineHeight: 1.5,
 };
 
-const benefitsGridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "0.75rem",
-  marginTop: "1rem",
-};
 
 const benefitCardStyle: React.CSSProperties = {
   background: "var(--coco-white)",
