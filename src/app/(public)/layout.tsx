@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <header className="public-header">
         <div className="public-header-inner">
           <Link href="/evaluar" className="public-logo-link">
-            <div className="public-logo-icon">N</div>
+            <img src="/logo_nutridin.png" alt="Nutridín logo" className="public-logo-image" />
             <span className="public-logo-text">Nutridín</span>
           </Link>
 
