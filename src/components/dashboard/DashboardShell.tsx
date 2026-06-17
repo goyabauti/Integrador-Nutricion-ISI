@@ -41,7 +41,7 @@ export function DashboardShell({ children, userEmail, userRole }: DashboardShell
       <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">N</div>
+            <img src="/logo_nutridin.png" alt="Nutridín logo" className="sidebar-logo-image" />
             <div className="sidebar-logo-text">
               <span className="sidebar-brand">Nutridín</span>
               <span className="sidebar-tagline">Panel de Resultados</span>

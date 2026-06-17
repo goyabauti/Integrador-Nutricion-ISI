@@ -56,13 +56,9 @@ export function validateSurveySubmission(body: unknown): {
 
   const b = body as Record<string, unknown>;
 
-  // Validar datos del evaluador
-  if (!isNonEmptyString(b.name)) {
-    return { valid: false, error: "El nombre es obligatorio" };
-  }
-  if (!isValidEmail(b.email)) {
-    return { valid: false, error: "El email no es válido" };
-  }
+  // name y email son opcionales (evaluación anónima)
+  const name = isNonEmptyString(b.name) ? (b.name as string).trim() : "Anónimo";
+  const email = isValidEmail(b.email) ? (b.email as string).trim().toLowerCase() : null;
 
   // Validar responses
   if (!Array.isArray(b.responses) || b.responses.length === 0) {
@@ -81,8 +77,8 @@ export function validateSurveySubmission(body: unknown): {
   return {
     valid: true,
     data: {
-      name: (b.name as string).trim(),
-      email: (b.email as string).trim().toLowerCase(),
+      name,
+      email,
       comment: typeof b.comment === "string" && b.comment.trim() ? b.comment.trim() : undefined,
       responses: b.responses.map((r: Record<string, unknown>) => ({
         question_id: r.question_id as number,

@@ -22,12 +22,7 @@ test.describe("Flujo de evaluación — 1 usuario", () => {
     const loadTime = Date.now() - startLoad;
     console.log(`  Carga de preguntas: ${loadTime} ms`);
 
-    // 3. Llenar datos personales
-    const uniqueEmail = `e2e-test-${Date.now()}-${Math.floor(Math.random() * 1000000)}@test.com`;
-    await page.fill('input[placeholder="Ej: María García"]', "Test E2E User");
-    await page.fill('input[placeholder="tu@email.com"]', uniqueEmail);
-
-    // 4. Mover todos los sliders a un valor aleatorio (2-5)
+    // 3. Mover todos los sliders a un valor aleatorio (2-5)
     const sliders = page.locator('input[type="range"]');
     const sliderCount = await sliders.count();
     console.log(`📋 Cantidad de sliders/preguntas: ${sliderCount}`);

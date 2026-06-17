@@ -7,6 +7,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Calidad de Budin",
   description: "Pagina que permite calificar distintas carateristicas del Budin",
+  icons: {
+    icon: "/logo_nutridin.png",
+    apple: "/logo_nutridin.png",
+  },
 };
 
 export default function RootLayout({

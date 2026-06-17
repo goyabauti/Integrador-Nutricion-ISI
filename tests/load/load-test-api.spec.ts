@@ -33,8 +33,6 @@ test.describe("Carga API — 100 usuarios simultáneos", () => {
     // ── Paso 2: Crear payloads para 100 usuarios ──
     const runId = `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
     const payloads = Array.from({ length: NUM_USERS }, (_, i) => ({
-      name: `LoadTest User ${i + 1}`,
-      email: `loadtest-${runId}-${i + 1}@test.com`,
       comment: `Test de carga #${i + 1} — ${new Date().toISOString()}`,
       responses: questions.map((q) => ({
         question_id: q.id,

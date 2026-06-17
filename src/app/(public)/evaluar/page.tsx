@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/Input";  // still used for comment
 import { Button } from "@/components/ui/Button";
 import { RatingSlider } from "@/components/ui/RatingSlider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
@@ -35,9 +35,8 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 /* ── Progress step component ── */
 function ProgressSteps({ currentStep }: { currentStep: number }) {
   const steps = [
-    { num: 1, label: "Datos" },
-    { num: 2, label: "Evaluar" },
-    { num: 3, label: "Enviar" },
+    { num: 1, label: "Evaluar" },
+    { num: 2, label: "Enviar" },
   ];
 
   return (
@@ -89,8 +88,6 @@ export default function EvaluarPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [comment, setComment] = useState("");
   const [scores, setScores] = useState<Record<number, number>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -128,8 +125,6 @@ export default function EvaluarPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = "Requerido";
-    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email inválido";
     questions.forEach(q => {
       if (!scores[q.id]) newErrors[`q_${q.id}`] = "Evaluá este atributo";
     });
@@ -141,15 +136,13 @@ export default function EvaluarPage() {
     e.preventDefault();
     setError("");
     if (!validateForm()) {
-      setError("Completá todos los campos y evaluá todos los atributos.");
+      setError("Evaluá todos los atributos antes de enviar.");
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     setLoadingSubmit(true);
     try {
       const payload = {
-        name,
-        email,
         comment: comment.trim() || undefined,
         responses: Object.entries(scores).map(([questionId, score]) => ({
           question_id: Number(questionId),
@@ -176,12 +169,9 @@ export default function EvaluarPage() {
   };
 
   /* ── Compute current progress step ── */
-  const hasPersonalData = name.trim().length > 0 && /^\S+@\S+\.\S+$/.test(email);
   const answeredCount = Object.keys(scores).length;
   const totalQuestions = questions.length;
-  const currentStep = hasPersonalData && answeredCount === totalQuestions ? 3
-    : hasPersonalData ? 2
-      : 1;
+  const currentStep = answeredCount === totalQuestions && totalQuestions > 0 ? 2 : 1;
 
   /* ── Group questions by category ── */
   const groupedQuestions = questions.reduce<Record<string, Question[]>>((acc, q) => {
@@ -227,36 +217,6 @@ export default function EvaluarPage() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
 
-          {/* Datos Personales */}
-          <Card>
-            <CardHeader>
-              <CardTitle style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coco-caramel)" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Tus datos
-              </CardTitle>
-              <CardDescription>Para saber quién nos ayuda a mejorar</CardDescription>
-            </CardHeader>
-            <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <Input
-                label="Nombre"
-                placeholder="Ej: María García"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                error={fieldErrors.name}
-              />
-              <Input
-                label="Email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                error={fieldErrors.email}
-              />
-            </CardContent>
-          </Card>
 
           {/* Questions grouped by category */}
           {Object.entries(groupedQuestions).map(([category, qs]) => (

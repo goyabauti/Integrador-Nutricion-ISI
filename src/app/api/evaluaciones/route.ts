@@ -75,10 +75,11 @@ export async function POST(request: Request) {
 
     const respondentId = crypto.randomUUID();
 
-    // 2. Insertar respondent
+    // 2. Insertar respondent (email placeholder si no se proporcionó)
+    const respondentEmail = email || `anonimo-${respondentId.slice(0, 8)}@evaluador.local`;
     const { error: respondentError } = await supabase
       .from("respondents")
-      .insert({ id: respondentId, name, email });
+      .insert({ id: respondentId, name, email: respondentEmail });
 
     if (respondentError) {
       return serverErrorResponse(respondentError.message);
