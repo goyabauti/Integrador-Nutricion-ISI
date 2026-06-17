@@ -1,5 +1,7 @@
 # My App
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/999e0134fbc34cd0b4d28580c593be96)](https://app.codacy.com/gh/goyabauti/Integrador-Nutricion-ISI?utm_source=github.com&utm_medium=referral&utm_content=goyabauti/Integrador-Nutricion-ISI&utm_campaign=Badge_Grade)
+
 Fullstack starter built with **Next.js 14** + **TypeScript**.  
 Frontend and backend live in the same project via Next.js App Router and API Routes.
 
